@@ -380,7 +380,7 @@
                                                   <td className="px-4 py-4">{findValue(item, ['Site']) || 'N/A'}</td>
                                                   <td className="px-4 py-4 font-medium text-gray-900 whitespace-nowrap">{findValue(item, ['Audit date Mandatory']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Skill']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Calling Number']) || 'N/A'}</td>
+                                                  <td className="px-4 py-4">{findValue(item, ['Calling Number', 'Number']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Agent ID']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Hotline']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['TL']) || 'N/A'}</td>
@@ -917,12 +917,60 @@
                     <CardHeader><CardTitle>Filter Your Data</CardTitle></CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <div className="space-y-1"><Label>Auditor</Label><SearchableInput id="auditor-list" value={filters.auditor} onChange={e => setFilters(p => ({...p, auditor: e.target.value}))} options={cascadingOptions.auditors} placeholder="Search Auditor..."/></div>
-                        <div className="space-y-1"><Label>Agent ID</Label><SearchableInput id="agent-list" value={filters.agentId} onChange={e => setFilters(p => ({...p, agentId: e.target.value}))} options={cascadingOptions.agentIds} placeholder="Search Agent ID..."/></div>
-                        <div className="space-y-1"><Label>TL Name</Label><SearchableInput id="tl-list" value={filters.tlName} onChange={e => setFilters(p => ({...p, tlName: e.target.value}))} options={cascadingOptions.tlNames} placeholder="Search TL Name..."/></div>
-                        <div className="space-y-1"><Label>Site</Label><SearchableInput id="site-list" value={filters.site} onChange={e => setFilters(p => ({...p, site: e.target.value}))} options={cascadingOptions.sites} placeholder="Search Site..."/></div>
-                        <div className="space-y-1"><Label>Tenure</Label><SearchableInput id="tenure-list" value={filters.tenure} onChange={e => setFilters(p => ({...p, tenure: e.target.value}))} options={cascadingOptions.tenures} placeholder="Search Tenure..."/></div>
-                        <div className="space-y-1"><Label>Skill</Label><SearchableInput id="skill-list" value={filters.skill} onChange={e => setFilters(p => ({...p, skill: e.target.value}))} options={cascadingOptions.skills} placeholder="Search Skill..."/></div>
+                        <div className="space-y-1"><Label>Auditor</Label>
+                            <SearchableInput 
+                                key={`auditor-${cascadingOptions.auditors.join('')}`}
+                                id="auditor-list" 
+                                value={filters.auditor} 
+                                onChange={e => setFilters(p => ({...p, auditor: e.target.value}))} 
+                                options={cascadingOptions.auditors} 
+                                placeholder="Search Auditor..."/>
+                        </div>
+                        <div className="space-y-1"><Label>Agent ID</Label>
+                            <SearchableInput 
+                                key={`agentId-${cascadingOptions.agentIds.join('')}`}
+                                id="agent-list" 
+                                value={filters.agentId} 
+                                onChange={e => setFilters(p => ({...p, agentId: e.target.value}))} 
+                                options={cascadingOptions.agentIds} 
+                                placeholder="Search Agent ID..."/>
+                        </div>
+                        <div className="space-y-1"><Label>TL Name</Label>
+                            <SearchableInput 
+                                key={`tlName-${cascadingOptions.tlNames.join('')}`}
+                                id="tl-list" 
+                                value={filters.tlName} 
+                                onChange={e => setFilters(p => ({...p, tlName: e.target.value}))} 
+                                options={cascadingOptions.tlNames} 
+                                placeholder="Search TL Name..."/>
+                        </div>
+                        <div className="space-y-1"><Label>Site</Label>
+                            <SearchableInput 
+                                key={`site-${cascadingOptions.sites.join('')}`}
+                                id="site-list" 
+                                value={filters.site} 
+                                onChange={e => setFilters(p => ({...p, site: e.target.value}))} 
+                                options={cascadingOptions.sites} 
+                                placeholder="Search Site..."/>
+                        </div>
+                        <div className="space-y-1"><Label>Tenure</Label>
+                            <SearchableInput 
+                                key={`tenure-${cascadingOptions.tenures.join('')}`}
+                                id="tenure-list" 
+                                value={filters.tenure} 
+                                onChange={e => setFilters(p => ({...p, tenure: e.target.value}))} 
+                                options={cascadingOptions.tenures} 
+                                placeholder="Search Tenure..."/>
+                        </div>
+                        <div className="space-y-1"><Label>Skill</Label>
+                            <SearchableInput 
+                                key={`skill-${cascadingOptions.skills.join('')}`}
+                                id="skill-list" 
+                                value={filters.skill} 
+                                onChange={e => setFilters(p => ({...p, skill: e.target.value}))} 
+                                options={cascadingOptions.skills} 
+                                placeholder="Search Skill..."/>
+                        </div>
                       </div>
                       <div className="mt-4 flex justify-end gap-4">
                           <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:opacity-70">
@@ -1020,3 +1068,4 @@
     </script>
 </body>
 </html>
+
