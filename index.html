@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Dashboard</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX transformation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- XLSX library from CDN -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,15 +17,23 @@
         body {
             font-family: 'Inter', sans-serif;
             color: #e5e7eb; /* Lighter text for dark bg */
-            background: linear-gradient(45deg, #4c1d95, #1e3a8a, #111827, #312e81);
-            background-size: 400% 400%;
-            animation: moveGradient 15s ease infinite;
+            background-color: #111827; /* Fallback color */
         }
 
-        @keyframes moveGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2071&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            filter: blur(8px);
+            -webkit-filter: blur(8px);
+            z-index: -1;
         }
 
         /* Keyframe animations for a dynamic feel */
@@ -65,7 +68,7 @@
 
         /* Glassmorphism effect for cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(17, 24, 39, 0.6); /* Darker, less transparent background for better readability */
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -485,6 +488,60 @@
             });
         };
         
+        // --- NEW: EFFECT FOR SAVING APP STATE ---
+        useEffect(() => {
+            const stateToSave = {
+                data,
+                filters,
+                selectedFileName,
+                googleSheetUrl,
+                customGoogleSheetUrl,
+                inputType,
+                auditorSortConfig,
+                tlSortConfig,
+                currentView,
+                detailData,
+                detailTitle,
+            };
+            try {
+                localStorage.setItem('auditDashboardState', JSON.stringify(stateToSave));
+            } catch (error) {
+                console.warn("Could not save app state, possibly because data is too large for localStorage.", error);
+                // Fallback: save state without the large 'data' array to avoid crashing.
+                const { data, ...fallbackState } = stateToSave;
+                localStorage.setItem('auditDashboardState', JSON.stringify(fallbackState));
+            }
+        }, [data, filters, selectedFileName, googleSheetUrl, customGoogleSheetUrl, inputType, auditorSortConfig, tlSortConfig, currentView, detailData, detailTitle]);
+
+        // --- NEW: EFFECT FOR LOADING APP STATE ON INITIAL RENDER ---
+        useEffect(() => {
+            // This effect runs only once on initial load due to the empty dependency array [].
+            try {
+                const savedStateJSON = localStorage.getItem('auditDashboardState');
+                if (savedStateJSON) {
+                    const savedState = JSON.parse(savedStateJSON);
+                    
+                    // Restore each piece of state if it exists in the saved object
+                    if (savedState.data) setData(savedState.data);
+                    if (savedState.filters) setFilters(savedState.filters);
+                    if (savedState.selectedFileName) setSelectedFileName(savedState.selectedFileName);
+                    if (savedState.googleSheetUrl) setGoogleSheetUrl(savedState.googleSheetUrl);
+                    if (savedState.customGoogleSheetUrl) setCustomGoogleSheetUrl(savedState.customGoogleSheetUrl);
+                    if (savedState.inputType) setInputType(savedState.inputType);
+                    if (savedState.auditorSortConfig) setAuditorSortConfig(savedState.auditorSortConfig);
+                    if (savedState.tlSortConfig) setTlSortConfig(savedState.tlSortConfig);
+                    if (savedState.currentView) setCurrentView(savedState.currentView);
+                    if (savedState.detailData) setDetailData(savedState.detailData);
+                    if (savedState.detailTitle) setDetailTitle(savedState.detailTitle);
+                }
+            } catch (error) {
+                console.error("Failed to load or parse saved state from localStorage.", error);
+                // If parsing fails, clear the corrupted state to start fresh next time.
+                localStorage.removeItem('auditDashboardState');
+            }
+        }, []);
+
+
         const handleSettingsClick = () => {
             setPinError('');
             setPinInput('');
@@ -567,7 +624,7 @@
                 skills: getOptionsFor('skill', filters),
             };
         }, [data, filters]);
-      
+        
         const processData = (workbook, sourceName) => {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
@@ -629,8 +686,11 @@
             setCustomGoogleSheetUrl('');
             setError(null);
             setInputType(null);
+            setCurrentView('dashboard');
+            // --- NEW: Clear the saved state from localStorage ---
+            localStorage.removeItem('auditDashboardState');
             if(document.getElementById('file-upload')) {
-               document.getElementById('file-upload').value = '';
+                document.getElementById('file-upload').value = '';
             }
         };
         
@@ -674,7 +734,7 @@
           });
           setFilteredData(filtered);
         }, [data, filters]);
-      
+        
         const handleViewDetails = () => {
             const titleParts = [];
             if (filters.auditor) titleParts.push(`Auditor: ${filters.auditor}`);
@@ -918,7 +978,7 @@
                     )}
                 </div>
               </header>
-      
+              
               {(data.length > 0 || isLoading) && (
                 <main className="space-y-8 fade-in-up">
                   <Card accentColor="#4f46e5">
@@ -995,14 +1055,14 @@
                       </div>
                     </CardContent>
                   </Card>
-      
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                     <Card accentColor={getAccentColor('total-audits')}><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-400"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
                     <Card accentColor={getAccentColor('total-ce', cePercentage)}><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-400"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
                     <Card accentColor={getAccentColor('total-nce', ncePercentage)}><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-400"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
                     <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
                   </div>
-      
+                  
                   {cardVisibility.auditorPerformance && <CollapsibleCard title="Auditor Performance Breakdown" accentColor="#3b82f6">
                       <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Auditor</div>
