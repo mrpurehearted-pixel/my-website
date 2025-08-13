@@ -21,8 +21,18 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            color: #e5e7eb; /* Lighter text for dark bg */
+            background: linear-gradient(45deg, #4c1d95, #1e3a8a, #111827, #312e81);
+            background-size: 400% 400%;
+            animation: moveGradient 15s ease infinite;
         }
+
+        @keyframes moveGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         /* Keyframe animations for a dynamic feel */
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -55,21 +65,21 @@
 
         /* Glassmorphism effect for cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         /* Custom scrollbar for a polished look */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #e0e7ff; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
         ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #4338ca; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -78,18 +88,18 @@
       // --- Reusable UI Components ---
       const Card = ({ className = '', children, accentColor }) => (
         <div 
-          className={`rounded-2xl glass-card text-gray-900 transition-all duration-300 hover:shadow-2xl ${className}`}
+          className={`rounded-2xl glass-card text-gray-200 transition-all duration-300 hover:shadow-2xl ${className}`}
           style={{ borderTop: `4px solid ${accentColor || 'transparent'}` }}
         >
           {children}
         </div>
       );
       const CardHeader = ({ className = '', children }) => <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>;
-      const CardTitle = ({ className = '', children }) => <h3 className={`text-xl font-bold leading-none tracking-tight text-gray-800 ${className}`}>{children}</h3>;
+      const CardTitle = ({ className = '', children }) => <h3 className={`text-xl font-bold leading-none tracking-tight text-gray-100 ${className}`}>{children}</h3>;
       const CardContent = ({ className = '', children }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
-      const Label = ({ className = '', children, htmlFor }) => <label className={`text-sm font-medium leading-none text-gray-600 ${className}`} htmlFor={htmlFor}>{children}</label>;
+      const Label = ({ className = '', children, htmlFor }) => <label className={`text-sm font-medium leading-none text-gray-300 ${className}`} htmlFor={htmlFor}>{children}</label>;
       
-      const Input = ({ className = '', type = 'text', ...props }) => <input type={type} className={`h-10 w-full rounded-lg border border-gray-300 bg-white/50 px-3 py-2 text-sm ring-offset-white file:border-0 file:text-sm file:font-medium placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ${className}`} {...props} />;
+      const Input = ({ className = '', type = 'text', ...props }) => <input type={type} className={`h-10 w-full rounded-lg border border-gray-700 bg-black/20 px-3 py-2 text-sm text-gray-200 ring-offset-gray-900 file:border-0 file:text-sm file:font-medium placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ${className}`} {...props} />;
       
       const SearchableInput = ({ value, onChange, options, id, placeholder }) => (
           <div className="relative">
@@ -111,7 +121,7 @@
               <Card accentColor={accentColor}>
                   <div className="flex items-center justify-between p-6 cursor-pointer" onClick={() => setIsMinimized(!isMinimized)}>
                       <CardTitle>{title}</CardTitle>
-                      <button className="text-indigo-500 hover:text-indigo-700 transition-transform duration-300" style={{ transform: isMinimized ? 'rotate(0deg)' : 'rotate(-180deg)' }}>
+                      <button className="text-indigo-400 hover:text-indigo-300 transition-transform duration-300" style={{ transform: isMinimized ? 'rotate(0deg)' : 'rotate(-180deg)' }}>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                           </svg>
@@ -153,15 +163,15 @@
       };
 
       const BarChart = ({ data, barColor }) => {
-          if (!data || data.length === 0) return <div className="flex items-center justify-center h-full text-gray-500">No data to display.</div>;
+          if (!data || data.length === 0) return <div className="flex items-center justify-center h-full text-gray-400">No data to display.</div>;
           const maxValue = Math.max(1, ...data.map(d => d.value));
           return (
               <div className="space-y-3 p-2 h-full">
                   {data.map((d, i) => (
                       <div key={i} className="grid grid-cols-12 gap-2 items-center fade-in-up" style={{ animationDelay: `${i * 120}ms`, opacity: 0 }}>
-                          <div className="col-span-4 text-right text-sm text-gray-700 truncate pr-2 font-medium">{d.name}</div>
+                          <div className="col-span-4 text-right text-sm text-gray-300 truncate pr-2 font-medium">{d.name}</div>
                           <div className="col-span-8 flex items-center">
-                              <div className="w-full bg-gray-200/50 rounded-full h-6 relative overflow-hidden">
+                              <div className="w-full bg-white/10 rounded-full h-6 relative overflow-hidden">
                                   <div className="rounded-full h-6" style={{ width: `${(d.value / maxValue) * 100}%`, background: barColor, transition: 'width 1s cubic-bezier(0.25, 1, 0.5, 1)' }}></div>
                                   <span className="absolute inset-0 flex items-center justify-end text-xs font-bold text-white pr-3">{d.value}</span>
                               </div>
@@ -207,16 +217,16 @@
           };
 
           return (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center fade-in">
-                  <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
-                      <div className="flex justify-between items-center p-4 border-b">
-                          <h2 className="text-xl font-bold text-gray-800">Settings</h2>
-                          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center fade-in">
+                  <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
+                      <div className="flex justify-between items-center p-4 border-b border-gray-700">
+                          <h2 className="text-xl font-bold text-gray-100">Settings</h2>
+                          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                       </div>
                       <div className="p-6 space-y-4">
-                          <h3 className="font-semibold text-gray-700">Manage Google Sheets</h3>
+                          <h3 className="font-semibold text-gray-200">Manage Google Sheets</h3>
                           <div className="space-y-2">
                               <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Sheet Name (e.g., 'My Team Sheet')" />
                               <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="Public Google Sheet CSV URL" />
@@ -226,23 +236,23 @@
                               <Button onClick={handleSaveClick} className="w-full">{editingUrl ? 'Update Sheet' : 'Add Sheet'}</Button>
                           </div>
                       </div>
-                      <div className="p-6 border-t">
-                          <h3 className="font-semibold text-gray-700 mb-2">Your Sheets</h3>
+                      <div className="p-6 border-t border-gray-700">
+                          <h3 className="font-semibold text-gray-200 mb-2">Your Sheets</h3>
                           <div className="space-y-2 max-h-40 overflow-y-auto">
                               {Object.keys(userSheets).length === 0 ? (
-                                  <p className="text-sm text-gray-500">You haven't added any custom sheets yet.</p>
+                                  <p className="text-sm text-gray-400">You haven't added any custom sheets yet.</p>
                               ) : (
                                   Object.entries(userSheets).map(([url, name]) => (
-                                      <div key={url} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                                      <div key={url} className="flex items-center justify-between bg-gray-700/50 p-2 rounded-md">
                                           <div className="truncate flex-1 mr-2">
-                                              <p className="font-medium text-gray-800 truncate">{name}</p>
+                                              <p className="font-medium text-gray-200 truncate">{name}</p>
                                               <p className="text-xs text-gray-500 truncate">{url}</p>
                                           </div>
                                           <div className="flex items-center">
-                                              <button onClick={() => handleEditClick(url, name)} className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 transition-colors">
+                                              <button onClick={() => handleEditClick(url, name)} className="text-blue-400 hover:text-blue-300 p-1 rounded-full hover:bg-blue-900/50 transition-colors">
                                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
                                               </button>
-                                              <button onClick={() => onDeleteSheet(url)} className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors">
+                                              <button onClick={() => onDeleteSheet(url)} className="text-red-400 hover:text-red-300 p-1 rounded-full hover:bg-red-900/50 transition-colors">
                                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                               </button>
                                           </div>
@@ -251,13 +261,13 @@
                               )}
                           </div>
                       </div>
-                      <div className="p-6 border-t">
-                          <h3 className="font-semibold text-gray-700 mb-2">Dashboard Visibility</h3>
+                      <div className="p-6 border-t border-gray-700">
+                          <h3 className="font-semibold text-gray-200 mb-2">Dashboard Visibility</h3>
                           <div className="grid grid-cols-2 gap-2">
                               {Object.entries(cardVisibility).map(([key, isVisible]) => (
                                   <label key={key} className="flex items-center space-x-2 cursor-pointer">
-                                      <input type="checkbox" checked={isVisible} onChange={() => onVisibilityChange(key)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                                      <span className="text-sm text-gray-700">
+                                      <input type="checkbox" checked={isVisible} onChange={() => onVisibilityChange(key)} className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500" />
+                                      <span className="text-sm text-gray-300">
                                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                                       </span>
                                   </label>
@@ -280,11 +290,11 @@
           };
 
           return (
-              <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center fade-in">
-                  <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
-                      <div className="flex justify-between items-center p-4 border-b">
-                          <h2 className="text-xl font-bold text-gray-800">Enter PIN</h2>
-                          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center fade-in">
+                  <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
+                      <div className="flex justify-between items-center p-4 border-b border-gray-700">
+                          <h2 className="text-xl font-bold text-gray-100">Enter PIN</h2>
+                          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                       </div>
@@ -301,9 +311,9 @@
                               className="text-center text-2xl tracking-[1rem]"
                               autoFocus
                           />
-                          {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+                          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
                       </div>
-                      <div className="p-4 bg-gray-50 rounded-b-xl">
+                      <div className="p-4 bg-gray-900/50 rounded-b-xl">
                           <Button onClick={onSubmit} className="w-full">
                               Submit
                           </Button>
@@ -313,7 +323,7 @@
           );
       };
       
-      // --- Detail View Component (UPDATED) ---
+      // --- Detail View Component ---
       const DetailView = ({ data, title, onBack }) => {
           // Helper to find a value by trying multiple possible keys, ignoring case and whitespace.
           const findValue = (item, keys) => {
@@ -338,7 +348,7 @@
           return (
               <div className="max-w-full mx-auto space-y-8 fade-in px-4 sm:px-0">
                   <header className="flex items-center justify-between py-4">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 truncate">{title}</h1>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 truncate">{title}</h1>
                        <div className="flex items-center gap-2">
                           <Button onClick={handleDownload} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 flex-shrink-0">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -353,8 +363,8 @@
                   <Card accentColor="#4f46e5">
                       <CardContent>
                           <div className="overflow-auto max-h-[75vh]">
-                              <table className="w-full text-sm text-left text-gray-600">
-                                  <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-10">
+                              <table className="w-full text-sm text-left text-gray-300">
+                                  <thead className="text-xs text-gray-300 uppercase bg-white/5 sticky top-0 z-10">
                                       <tr>
                                           <th scope="col" className="px-4 py-3">Site</th>
                                           <th scope="col" className="px-4 py-3">Audit Date</th>
@@ -376,9 +386,9 @@
                                           const isRTC = findValue(item, ['RTC']) === 'TRUE';
                                           
                                           return (
-                                              <tr key={index} className="bg-white border-b hover:bg-gray-50">
+                                              <tr key={index} className="border-b border-gray-800 hover:bg-white/5">
                                                   <td className="px-4 py-4">{findValue(item, ['Site']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4 font-medium text-gray-900 whitespace-nowrap">{findValue(item, ['Audit date Mandatory']) || 'N/A'}</td>
+                                                  <td className="px-4 py-4 font-medium text-gray-100 whitespace-nowrap">{findValue(item, ['Audit date Mandatory']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Skill']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Calling Number', 'Number']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Agent ID']) || 'N/A'}</td>
@@ -387,9 +397,9 @@
                                                   <td className="px-4 py-4">{findValue(item, ['Auditor QA']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">{findValue(item, ['Tenure 2']) || 'N/A'}</td>
                                                   <td className="px-4 py-4">
-                                                      {isCE && <span className="inline-block bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">CE</span>}
-                                                      {isNCE && <span className="inline-block bg-orange-200 text-orange-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">NCE</span>}
-                                                      {isRTC && <span className="inline-block bg-yellow-200 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">RTC</span>}
+                                                      {isCE && <span className="inline-block bg-red-900/50 text-red-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">CE</span>}
+                                                      {isNCE && <span className="inline-block bg-orange-900/50 text-orange-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">NCE</span>}
+                                                      {isRTC && <span className="inline-block bg-yellow-900/50 text-yellow-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">RTC</span>}
                                                   </td>
                                                   <td className="px-4 py-4 max-w-xs truncate" title={findValue(item, ['QA Comments'])}>{findValue(item, ['QA Comments']) || 'N/A'}</td>
                                               </tr>
@@ -807,30 +817,30 @@
         };
         const getTableCellColor = (value, threshold, isHigherBetter = false) => {
             const isBad = isHigherBetter ? parseFloat(value) < threshold : parseFloat(value) > threshold;
-            return isBad ? 'text-red-600' : 'text-green-600';
+            return isBad ? 'text-red-400' : 'text-green-400';
         };
         
         const SortableHeader = ({ label, sortKey, sortConfig, setSortConfig }) => {
             const isSorted = sortConfig.key === sortKey;
             const icon = isSorted ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '';
             return (
-                <button onClick={() => requestSort(sortKey, sortConfig, setSortConfig)} className="flex items-center justify-center gap-2 font-semibold text-gray-600 hover:text-indigo-600 transition-colors">
+                <button onClick={() => requestSort(sortKey, sortConfig, setSortConfig)} className="flex items-center justify-center gap-2 font-semibold text-gray-300 hover:text-indigo-400 transition-colors">
                     <span>{label}</span>
-                    <span className="text-indigo-600">{icon}</span>
+                    <span className="text-indigo-400">{icon}</span>
                 </button>
             );
         };
         
         if (currentView === 'detail') {
             return (
-                <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-100 min-h-screen p-4 sm:p-8">
+                <div className="p-4 sm:p-8">
                     <DetailView data={detailData} title={detailTitle} onBack={() => setCurrentView('dashboard')} />
                 </div>
             );
         }
 
         return (
-          <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-100 min-h-screen p-4 sm:p-8">
+          <div className="p-4 sm:p-8">
             <PinModal 
                 isOpen={isPinModalOpen} 
                 onClose={() => setIsPinModalOpen(false)} 
@@ -849,22 +859,22 @@
                 onVisibilityChange={handleVisibilityChange}
             />
             <div className="max-w-7xl mx-auto space-y-8">
-              <header className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-6 rounded-2xl shadow-2xl fade-in-down relative">
+              <header className="glass-card text-white p-6 rounded-2xl shadow-2xl fade-in-down relative">
                 <div className="text-center">
                     <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Audit Dashboard</h1>
-                    <p className="text-indigo-200 mt-2 text-lg">Your data, beautifully visualized.</p>
+                    <p className="text-gray-300 mt-2 text-lg">Your data, beautifully visualized.</p>
                 </div>
-                <button onClick={handleSettingsClick} className="absolute top-4 right-4 text-white p-2 rounded-full hover:bg-white/20 transition-colors pulse-on-hover">
+                <button onClick={handleSettingsClick} className="absolute top-4 right-4 text-white p-2 rounded-full hover:bg-white/10 transition-colors pulse-on-hover">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </button>
                 
                 <div className="mt-8 space-y-4">
                     <div className="flex items-center justify-center gap-6">
-                        <div onClick={() => handleInputTypeSelect('excel')} className={`flex flex-col items-center justify-center p-4 w-44 h-32 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${inputType === 'excel' ? 'bg-white/30 ring-2 ring-white shadow-lg' : 'bg-white/10 hover:bg-white/20'}`}>
+                        <div onClick={() => handleInputTypeSelect('excel')} className={`flex flex-col items-center justify-center p-4 w-44 h-32 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${inputType === 'excel' ? 'bg-white/20 ring-2 ring-white shadow-lg' : 'bg-white/5 hover:bg-white/10'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M12 7h.01M15 7h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                             <span className="mt-2 font-semibold text-white">Excel File</span>
                         </div>
-                        <div onClick={() => handleInputTypeSelect('googleSheet')} className={`flex flex-col items-center justify-center p-4 w-44 h-32 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${inputType === 'googleSheet' ? 'bg-white/30 ring-2 ring-white shadow-lg' : 'bg-white/10 hover:bg-white/20'}`}>
+                        <div onClick={() => handleInputTypeSelect('googleSheet')} className={`flex flex-col items-center justify-center p-4 w-44 h-32 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${inputType === 'googleSheet' ? 'bg-white/20 ring-2 ring-white shadow-lg' : 'bg-white/5 hover:bg-white/10'}`}>
                            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                             <span className="mt-2 font-semibold text-white">Google Sheet</span>
                         </div>
@@ -872,18 +882,18 @@
 
                     {inputType === 'excel' && (
                         <div className="flex justify-center w-full max-w-md mx-auto pt-2 fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <Input id="file-upload" type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} className="text-gray-900 bg-white cursor-pointer file:rounded-md file:bg-blue-500 file:border-0 file:text-white file:font-semibold file:text-sm file:py-2 file:px-4 hover:file:bg-blue-600"/>
+                            <Input id="file-upload" type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} className="cursor-pointer file:rounded-md file:bg-blue-500 file:border-0 file:text-white file:font-semibold file:text-sm file:py-2 file:px-4 hover:file:bg-blue-600"/>
                         </div>
                     )}
 
                     {inputType === 'googleSheet' && (
                         <div className="space-y-2 w-full max-w-xl mx-auto pt-2 fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <select value={googleSheetUrl} onChange={e => { const url = e.target.value; setGoogleSheetUrl(url); if (url !== "custom" && url !== "") { handleUrlLoad(url); }}} className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 ring-offset-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                {Object.entries(allSheetOptions).map(([url, name]) => ( <option key={url} value={url}>{name}</option>))}
+                            <select value={googleSheetUrl} onChange={e => { const url = e.target.value; setGoogleSheetUrl(url); if (url !== "custom" && url !== "") { handleUrlLoad(url); }}} className="h-10 w-full rounded-md border border-gray-700 bg-black/20 px-3 py-2 text-sm text-gray-200 ring-offset-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                {Object.entries(allSheetOptions).map(([url, name]) => ( <option key={url} value={url} className="bg-gray-800 text-gray-200">{name}</option>))}
                             </select>
                             {googleSheetUrl === 'custom' && (
                                 <div className="flex items-center justify-center gap-2 w-full fade-in-up" style={{animationDuration: '0.3s'}}>
-                                    <Input type="text" value={customGoogleSheetUrl} onChange={e => setCustomGoogleSheetUrl(e.target.value)} placeholder="Paste public CSV URL and press Load" className="bg-white text-gray-900 w-full"/>
+                                    <Input type="text" value={customGoogleSheetUrl} onChange={e => setCustomGoogleSheetUrl(e.target.value)} placeholder="Paste public CSV URL and press Load" className="w-full"/>
                                     <Button onClick={() => handleUrlLoad(customGoogleSheetUrl)} className="flex-shrink-0">Load</Button>
                                 </div>
                             )}
@@ -897,15 +907,13 @@
                         </div>
                     )}
                     {!isLoading && error && (
-                        <div className="flex items-center justify-center space-x-4 bg-red-900 bg-opacity-50 p-2 rounded-lg max-w-md mx-auto mt-4">
+                        <div className="flex items-center justify-center space-x-4 bg-red-900/50 p-2 rounded-lg max-w-md mx-auto mt-4">
                             <p className="text-sm text-white truncate">Error: {error}</p>
-                            <Button onClick={handleReset} className="bg-red-500 hover:bg-red-600 h-8 px-3 text-xs flex-shrink-0">Try Again</Button>
                         </div>
                     )}
                     {!isLoading && !error && selectedFileName && (
-                        <div className="flex items-center justify-center space-x-2 bg-black bg-opacity-20 p-2 rounded-lg max-w-md mx-auto mt-4">
+                        <div className="flex items-center justify-center space-x-2 bg-black/30 p-2 rounded-lg max-w-md mx-auto mt-4">
                             <p className="text-sm text-white truncate">Loaded: <span className="font-semibold">{selectedFileName}</span></p>
-                            <Button onClick={handleReset} className="bg-red-500 hover:bg-red-600 h-8 px-3 text-xs flex-shrink-0">Reset</Button>
                         </div>
                     )}
                 </div>
@@ -973,26 +981,31 @@
                         </div>
                       </div>
                       <div className="mt-4 flex justify-end gap-4">
-                          <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:opacity-70">
+                          <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70">
                               View Details
                           </Button>
                           <Button onClick={handleClearFilters} className="from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500">
                               Clear Filters
                           </Button>
+                          {data.length > 0 && (
+                            <Button onClick={handleReset} className="from-red-600 to-pink-500 hover:from-red-700 hover:to-pink-600">
+                                Reset Data
+                            </Button>
+                          )}
                       </div>
                     </CardContent>
                   </Card>
       
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                    <Card accentColor={getAccentColor('total-audits')}><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-600"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
-                    <Card accentColor={getAccentColor('total-ce', cePercentage)}><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-600"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-500"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
-                    <Card accentColor={getAccentColor('total-nce', ncePercentage)}><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-600"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-500"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
-                    <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-600"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-audits')}><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-400"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-ce', cePercentage)}><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-400"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-nce', ncePercentage)}><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-400"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
+                    <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
                   </div>
       
                   {cardVisibility.auditorPerformance && <CollapsibleCard title="Auditor Performance Breakdown" accentColor="#3b82f6">
-                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-indigo-200/50 text-sm text-center">
-                          <div className="text-left font-semibold text-gray-600 col-span-2">Auditor</div>
+                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Auditor</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
@@ -1000,12 +1013,12 @@
                       </div>
                       <div className="space-y-2 mt-2">
                           {auditorMetrics.map((auditor, index) => (
-                              <div key={auditor.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg bg-white/50 hover:bg-indigo-50/50 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={auditor.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
-                                      <span className="font-bold text-indigo-600 bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
-                                      <span className="font-semibold text-gray-800 truncate">{auditor.name}</span>
+                                      <span className="font-bold text-indigo-300 bg-indigo-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                      <span className="font-semibold text-gray-200 truncate">{auditor.name}</span>
                                   </div>
-                                  <div className="text-center font-bold text-gray-700">{auditor.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{auditor.totalAudits}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.cePercentage, 1)}`}>{auditor.cePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.ncePercentage, 10)}`}>{auditor.ncePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.rtcAccuracy, 90, true)}`}>{auditor.rtcAccuracy.toFixed(2)}%</div>
@@ -1015,8 +1028,8 @@
                   </CollapsibleCard>}
 
                   {cardVisibility.tlPerformance && <CollapsibleCard title="TL Performance Breakdown" accentColor="#10b981">
-                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-green-200/50 text-sm text-center">
-                          <div className="text-left font-semibold text-gray-600 col-span-2">Team Lead</div>
+                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Team Lead</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
@@ -1024,12 +1037,12 @@
                       </div>
                       <div className="space-y-2 mt-2">
                           {tlMetrics.map((tl, index) => (
-                              <div key={tl.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg bg-white/50 hover:bg-green-50/50 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={tl.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
-                                      <span className="font-bold text-green-600 bg-green-100 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
-                                      <span className="font-semibold text-gray-800 truncate">{tl.name}</span>
+                                      <span className="font-bold text-green-300 bg-green-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                      <span className="font-semibold text-gray-200 truncate">{tl.name}</span>
                                   </div>
-                                  <div className="text-center font-bold text-gray-700">{tl.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{tl.totalAudits}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.cePercentage, 1)}`}>{tl.cePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.ncePercentage, 10)}`}>{tl.ncePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.rtcAccuracy, 90, true)}`}>{tl.rtcAccuracy.toFixed(2)}%</div>
@@ -1052,7 +1065,7 @@
                 </main>
               )}
               <footer className="text-center py-6 mt-4">
-                  <div className="flex items-center justify-center text-gray-600">
+                  <div className="flex items-center justify-center text-gray-400">
                       <p className="text-sm font-semibold">Created By MD Ariful Islam Khan</p>
                   </div>
               </footer>
@@ -1068,4 +1081,3 @@
     </script>
 </body>
 </html>
-
