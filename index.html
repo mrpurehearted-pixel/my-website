@@ -457,15 +457,31 @@
             { name: 'Dark Waves', url: 'https://images.unsplash.com/photo-1536329583941-14287ec6fc4e?q=80&w=1980&auto=format&fit=crop'}
         ];
 
-        const [data, setData] = useState([]);
-        const [filteredData, setFilteredData] = useState([]);
-        const [filters, setFilters] = useState({ auditor: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
-        const [selectedFileName, setSelectedFileName] = useState(null);
-        const [googleSheetUrl, setGoogleSheetUrl] = useState("");
-        const [customGoogleSheetUrl, setCustomGoogleSheetUrl] = useState("");
+        const [initialState] = useState(() => {
+            try {
+                const savedState = localStorage.getItem('auditDashboardState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    if (parsedState && typeof parsedState === 'object') {
+                        return parsedState;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse state from localStorage", e);
+            }
+            return {};
+        });
+
+        const [data, setData] = useState(initialState.data || []);
+        const [filteredData, setFilteredData] = useState(initialState.data || []);
+        const [filters, setFilters] = useState(initialState.filters || { auditor: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
+        const [selectedFileName, setSelectedFileName] = useState(initialState.selectedFileName || null);
+        const [googleSheetUrl, setGoogleSheetUrl] = useState(initialState.googleSheetUrl || "");
+        const [customGoogleSheetUrl, setCustomGoogleSheetUrl] = useState(initialState.customGoogleSheetUrl || "");
+        const [inputType, setInputType] = useState(initialState.inputType || null);
+        
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState(null);
-        const [inputType, setInputType] = useState(null);
         const [isPinModalOpen, setIsPinModalOpen] = useState(false);
         const [pinInput, setPinInput] = useState('');
         const [pinError, setPinError] = useState('');
@@ -482,6 +498,24 @@
             document.getElementById('background-container').style.backgroundImage = `url('${currentBackground}')`;
             localStorage.setItem('dashboardBackground', currentBackground);
         }, [currentBackground]);
+
+        useEffect(() => {
+            if (data.length > 0) {
+                const stateToSave = {
+                    data,
+                    filters,
+                    selectedFileName,
+                    googleSheetUrl,
+                    customGoogleSheetUrl,
+                    inputType,
+                };
+                try {
+                    localStorage.setItem('auditDashboardState', JSON.stringify(stateToSave));
+                } catch (e) {
+                    console.error("Failed to save state to localStorage. Data might be too large.", e);
+                }
+            }
+        }, [data, filters, selectedFileName, googleSheetUrl, customGoogleSheetUrl, inputType]);
 
         const [cardVisibility, setCardVisibility] = useState(() => {
             const savedVisibility = localStorage.getItem('cardVisibility');
@@ -669,7 +703,8 @@
         const handleClearFilters = () => setFilters({ auditor: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
         
         const handleReset = () => {
-            setData([]); setFilteredData([]);
+            setData([]);
+            setFilteredData([]);
             handleClearFilters();
             setSelectedFileName(null);
             setGoogleSheetUrl('');
@@ -679,6 +714,7 @@
             if(document.getElementById('file-upload')) {
                document.getElementById('file-upload').value = '';
             }
+            localStorage.removeItem('auditDashboardState');
         };
         
         const handleInputTypeSelect = (type) => {
@@ -694,7 +730,8 @@
         };
 
         useEffect(() => {
-          let filtered = data.filter(item => findValue(item, ['Status']) === 'TRUE' && findValue(item, ['Status_1']) === 'Done');
+          let initialData = data.filter(item => findValue(item, ['Status']) === 'TRUE');
+          let filtered = initialData;
           if (filters.auditor) filtered = filtered.filter(item => {
               const auditor = findValue(item, ['Auditor QA', 'Auditor']);
               return auditor && auditor.toLowerCase().includes(filters.auditor.toLowerCase());
