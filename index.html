@@ -613,12 +613,16 @@
             { name: 'Dark Waves', url: 'https://images.unsplash.com/photo-1536329583941-14287ec6fc4e?q=80&w=1980&auto=format&fit=crop'}
         ];
 
+        const initialFilters = { evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '', startDate: '', endDate: '' };
+
         const [initialState] = useState(() => {
             try {
                 const savedState = localStorage.getItem('auditDashboardState');
                 if (savedState) {
                     const parsedState = JSON.parse(savedState);
                     if (parsedState && typeof parsedState === 'object') {
+                        // Ensure filters have all keys, even if saved state is from an older version
+                        parsedState.filters = { ...initialFilters, ...parsedState.filters };
                         return parsedState;
                     }
                 }
@@ -630,7 +634,7 @@
 
         const [data, setData] = useState(initialState.data || []);
         const [filteredData, setFilteredData] = useState(initialState.data || []);
-        const [filters, setFilters] = useState(initialState.filters || { evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '', startDate: '', endDate: '' });
+        const [filters, setFilters] = useState(initialState.filters || initialFilters);
         const [selectedFileName, setSelectedFileName] = useState(initialState.selectedFileName || null);
         const [googleSheetUrl, setGoogleSheetUrl] = useState(initialState.googleSheetUrl || "");
         const [customGoogleSheetUrl, setCustomGoogleSheetUrl] = useState(initialState.customGoogleSheetUrl || "");
@@ -816,12 +820,16 @@
             };
         }, [data, filters]);
       
+        const clearFilters = useCallback(() => {
+            setFilters(initialFilters);
+        }, []);
+
         const processData = (workbook, sourceName) => {
+            clearFilters(); // BUG FIX: Clear filters when new data is processed
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = window.XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'yyyy-mm-dd' });
             setData(json);
-            setFilteredData(json);
             setSelectedFileName(sourceName);
             showToast('Data loaded successfully!', 'success');
         };
@@ -829,7 +837,6 @@
         const handleFileUpload = (e) => {
           const file = e.target.files[0];
           if (file) {
-            setData([]); setFilteredData([]);
             setIsLoading(true);
             setSelectedFileName(file.name);
             const reader = new FileReader();
@@ -847,7 +854,6 @@
         
         const handleUrlLoad = async (url) => {
             if (!url) { showToast("Please enter a URL.", "error"); return; }
-            setData([]); setFilteredData([]);
             setIsLoading(true);
             setSelectedFileName(null);
             try {
@@ -867,7 +873,7 @@
         };
 
         const handleClearFilters = () => {
-            setFilters({ evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '', startDate: '', endDate: '' });
+            clearFilters();
             showToast('Filters cleared', 'info');
         };
         
