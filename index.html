@@ -355,11 +355,61 @@
               </div>
           );
       };
+
+      // --- Record Detail Modal ---
+      const RecordDetailModal = ({ isOpen, onClose, record, findValue }) => {
+          if (!isOpen || !record) return null;
+          
+          const DetailItem = ({ label, value }) => (
+              <div>
+                  <p className="text-sm font-medium text-gray-400">{label}</p>
+                  <p className="text-base text-gray-200">{value || 'N/A'}</p>
+              </div>
+          );
+
+          return (
+              <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center fade-in" onClick={onClose}>
+                  <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-2xl m-4 fade-in-up" style={{animationDuration: '0.4s'}} onClick={e => e.stopPropagation()}>
+                      <div className="flex justify-between items-center p-4 border-b border-gray-700">
+                          <h2 className="text-xl font-bold text-gray-100">Record Details</h2>
+                          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                      </div>
+                      <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <DetailItem label="Calling Date & Time" value={findValue(record, ['Local Start Time'])} />
+                              <DetailItem label="Calling Number" value={findValue(record, ['Calling Number'])} />
+                              <DetailItem label="Audit Date" value={findValue(record, ['Audit Date'])} />
+                              <DetailItem label="Agent ID" value={findValue(record, ['Evaluatee NT Login', 'Agent ID'])} />
+                              <DetailItem label="TL Name" value={findValue(record, ['Team Leader', 'TL'])} />
+                              <DetailItem label="Skill" value={findValue(record, ['Skill'])} />
+                              <DetailItem label="QA Name" value={findValue(record, ['Evaluator Name', 'Auditor QA'])} />
+                              <DetailItem label="CE Topic" value={findValue(record, ['CE Topic'])} />
+                          </div>
+                          <div className="grid grid-cols-3 gap-4">
+                              <DetailItem label="NCE" value={findValue(record, ['NCE'])} />
+                              <DetailItem label="CE" value={findValue(record, ['CE'])} />
+                              <DetailItem label="RTC" value={findValue(record, ['RTC'])} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-medium text-gray-400">QA Comments</p>
+                              <p className="text-base text-gray-200 whitespace-pre-wrap break-words mt-1 bg-gray-900/50 p-3 rounded-md">{findValue(record, ['QA Comments']) || 'N/A'}</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          );
+      };
       
-      // --- Detail View Component ---
+      // --- Detail View Component (UPDATED) ---
       const DetailView = ({ data, title, onBack }) => {
+          const [isModalOpen, setIsModalOpen] = useState(false);
+          const [selectedRecord, setSelectedRecord] = useState(null);
+
           // Helper to find a value by trying multiple possible keys, ignoring case and whitespace.
           const findValue = (item, keys) => {
+              if (!item) return null;
               const itemKeys = Object.keys(item);
               for (const searchKey of keys) {
                   const normalizedSearchKey = searchKey.trim().toLowerCase();
@@ -371,79 +421,111 @@
               return null;
           };
 
+          const handleRowClick = (record) => {
+              setSelectedRecord(record);
+              setIsModalOpen(true);
+          };
+
           const handleDownload = () => {
-              const worksheet = window.XLSX.utils.json_to_sheet(data);
+              const exportData = data.map(item => ({
+                  "Calling date & time": findValue(item, ['Local Start Time']),
+                  "Calling Number": findValue(item, ['Calling Number']),
+                  "Audit Date": findValue(item, ['Audit Date']),
+                  "Agent ID": findValue(item, ['Evaluatee NT Login', 'Agent ID']),
+                  "TL Name": findValue(item, ['Team Leader', 'TL']),
+                  "Skill": findValue(item, ['Skill']),
+                  "QA Name": findValue(item, ['Evaluator Name', 'Auditor QA']),
+                  "NCE": findValue(item, ['NCE']),
+                  "CE": findValue(item, ['CE']),
+                  "RTC": findValue(item, ['RTC']),
+                  "CE Topic": findValue(item, ['CE Topic']),
+                  "QA Comments": findValue(item, ['QA Comments'])
+              }));
+              const worksheet = window.XLSX.utils.json_to_sheet(exportData);
               const workbook = window.XLSX.utils.book_new();
               window.XLSX.utils.book_append_sheet(workbook, worksheet, "Audit Details");
               window.XLSX.writeFile(workbook, "audit_details.xlsx");
           };
 
+          const getStatusColor = (status) => {
+              if (status === 'Fail') return 'bg-red-900/50 text-red-300';
+              if (status === 'Pass') return 'bg-green-900/50 text-green-300';
+              if (status === 'Missing') return 'bg-yellow-900/50 text-yellow-300';
+              return 'bg-gray-700 text-gray-300';
+          };
+
           return (
-              <div className="max-w-full mx-auto space-y-8 fade-in px-4 sm:px-0">
-                  <header className="flex items-center justify-between py-4">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 truncate">{title}</h1>
-                       <div className="flex items-center gap-2">
-                          <Button onClick={handleDownload} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 flex-shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                              Download
-                          </Button>
-                          <Button onClick={onBack} className="from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 flex-shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
-                              Back
-                          </Button>
-                      </div>
-                  </header>
-                  <Card accentColor="#4f46e5">
-                      <CardContent>
-                          <div className="overflow-auto max-h-[75vh]">
-                              <table className="w-full text-sm text-left text-gray-300">
-                                  <thead className="text-xs text-gray-300 uppercase bg-white/5 sticky top-0 z-10">
-                                      <tr>
-                                          <th scope="col" className="px-4 py-3">Site</th>
-                                          <th scope="col" className="px-4 py-3">Audit Date</th>
-                                          <th scope="col" className="px-4 py-3">Skill</th>
-                                          <th scope="col" className="px-4 py-3">Calling Number</th>
-                                          <th scope="col" className="px-4 py-3">Agent ID</th>
-                                          <th scope="col" className="px-4 py-3">Hotline</th>
-                                          <th scope="col" className="px-4 py-3">TL</th>
-                                          <th scope="col" className="px-4 py-3">Auditor QA</th>
-                                          <th scope="col" className="px-4 py-3">Tenure</th>
-                                          <th scope="col" className="px-4 py-3">Errors</th>
-                                          <th scope="col" className="px-4 py-3">Comments</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                      {data.map((item, index) => {
-                                          const isCE = findValue(item, ['CE']) === 'TRUE';
-                                          const isNCE = findValue(item, ['NCE']) === 'TRUE';
-                                          const isRTC = findValue(item, ['RTC']) === 'TRUE';
-                                          
-                                          return (
-                                              <tr key={index} className="border-b border-gray-800 hover:bg-white/5">
-                                                  <td className="px-4 py-4">{findValue(item, ['Site']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4 font-medium text-gray-100 whitespace-nowrap">{findValue(item, ['Audit date Mandatory']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Skill']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Calling Number', 'Number']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Agent ID']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Hotline']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['TL']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Auditor QA']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">{findValue(item, ['Tenure 2']) || 'N/A'}</td>
-                                                  <td className="px-4 py-4">
-                                                      {isCE && <span className="inline-block bg-red-900/50 text-red-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">CE</span>}
-                                                      {isNCE && <span className="inline-block bg-orange-900/50 text-orange-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">NCE</span>}
-                                                      {isRTC && <span className="inline-block bg-yellow-900/50 text-yellow-300 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">RTC</span>}
-                                                  </td>
-                                                  <td className="px-4 py-4 max-w-xs truncate" title={findValue(item, ['QA Comments'])}>{findValue(item, ['QA Comments']) || 'N/A'}</td>
-                                              </tr>
-                                          );
-                                      })}
-                                  </tbody>
-                              </table>
-                          </div>
-                      </CardContent>
-                  </Card>
-              </div>
+              <>
+                <RecordDetailModal 
+                    isOpen={isModalOpen} 
+                    onClose={() => setIsModalOpen(false)} 
+                    record={selectedRecord}
+                    findValue={findValue}
+                />
+                <div className="max-w-full mx-auto space-y-8 fade-in px-4 sm:px-0">
+                    <header className="flex items-center justify-between py-4">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 truncate">{title}</h1>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={handleDownload} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Download
+                            </Button>
+                            <Button onClick={onBack} className="from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                                Back
+                            </Button>
+                        </div>
+                    </header>
+                    <Card accentColor="#4f46e5">
+                        <CardContent>
+                            <div className="overflow-auto max-h-[75vh]">
+                                <table className="w-full text-sm text-left text-gray-300">
+                                    <thead className="text-xs text-gray-300 uppercase bg-white/5 sticky top-0 z-10">
+                                        <tr>
+                                            <th scope="col" className="px-4 py-3">Calling Date & Time</th>
+                                            <th scope="col" className="px-4 py-3">Calling Number</th>
+                                            <th scope="col" className="px-4 py-3">Audit Date</th>
+                                            <th scope="col" className="px-4 py-3">Agent ID</th>
+                                            <th scope="col" className="px-4 py-3">TL Name</th>
+                                            <th scope="col" className="px-4 py-3">Skill</th>
+                                            <th scope="col" className="px-4 py-3">QA Name</th>
+                                            <th scope="col" className="px-4 py-3">NCE</th>
+                                            <th scope="col" className="px-4 py-3">CE</th>
+                                            <th scope="col" className="px-4 py-3">RTC</th>
+                                            <th scope="col" className="px-4 py-3">CE Topic</th>
+                                            <th scope="col" className="px-4 py-3">QA Comments</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.map((item, index) => {
+                                            const nceStatus = findValue(item, ['NCE']) || 'N/A';
+                                            const ceStatus = findValue(item, ['CE']) || 'N/A';
+                                            const rtcStatus = findValue(item, ['RTC']) || 'N/A';
+                                            
+                                            return (
+                                                <tr key={index} className="border-b border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => handleRowClick(item)}>
+                                                    <td className="px-4 py-4 font-medium text-gray-100 whitespace-nowrap">{findValue(item, ['Local Start Time']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Calling Number']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Audit Date']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Evaluatee NT Login', 'Agent ID']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Team Leader', 'TL']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Skill']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4">{findValue(item, ['Evaluator Name', 'Auditor QA']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4"><span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${getStatusColor(nceStatus)}`}>{nceStatus}</span></td>
+                                                    <td className="px-4 py-4"><span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${getStatusColor(ceStatus)}`}>{ceStatus}</span></td>
+                                                    <td className="px-4 py-4"><span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${getStatusColor(rtcStatus)}`}>{rtcStatus}</span></td>
+                                                    <td className="px-4 py-4 max-w-xs truncate" title={findValue(item, ['CE Topic'])}>{findValue(item, ['CE Topic']) || 'N/A'}</td>
+                                                    <td className="px-4 py-4 max-w-xs truncate" title={findValue(item, ['QA Comments'])}>{findValue(item, ['QA Comments']) || 'N/A'}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+              </>
           );
       };
 
@@ -474,7 +556,7 @@
 
         const [data, setData] = useState(initialState.data || []);
         const [filteredData, setFilteredData] = useState(initialState.data || []);
-        const [filters, setFilters] = useState(initialState.filters || { auditor: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
+        const [filters, setFilters] = useState(initialState.filters || { evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
         const [selectedFileName, setSelectedFileName] = useState(initialState.selectedFileName || null);
         const [googleSheetUrl, setGoogleSheetUrl] = useState(initialState.googleSheetUrl || "");
         const [customGoogleSheetUrl, setCustomGoogleSheetUrl] = useState(initialState.customGoogleSheetUrl || "");
@@ -520,13 +602,15 @@
         const [cardVisibility, setCardVisibility] = useState(() => {
             const savedVisibility = localStorage.getItem('cardVisibility');
             const defaultVisibility = {
-                auditorPerformance: true,
+                evaluatorPerformance: true,
                 tlPerformance: false,
                 topCeHolders: true,
                 topNceHolders: true,
-                topNceTopics: false,
+                topCeTopics: true, // Added this
             };
-            return savedVisibility ? JSON.parse(savedVisibility) : defaultVisibility;
+            const loadedVisibility = savedVisibility ? JSON.parse(savedVisibility) : {};
+            // Ensure new keys are added to existing user settings
+            return { ...defaultVisibility, ...loadedVisibility };
         });
 
         useEffect(() => {
@@ -539,7 +623,11 @@
         
         const [userSheetOptions, setUserSheetOptions] = useState(() => {
             const arifSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc-C8laLadVQw5LfI-liTMtWdUBURDuUmTmNRNHHuqZrC-vWVEwYJdvLh-YCaiUViMRepVXu9qP9qL/pub?gid=0&single=true&output=csv";
-            const defaultCustomSheet = { [arifSheetUrl]: "Arif's Sheet" };
+            const gpSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPOIS24AoFgLGukHhFXgOuDrm9XRDRKMADoFSNnYk8o4dAr3g0lTiEav898Ndfa-P4zJbewsouYnxz/pub?gid=0&single=true&output=csv";
+            const defaultCustomSheet = { 
+                [arifSheetUrl]: "Arif's Sheet",
+                [gpSheetUrl]: "GP Sample File"
+            };
             try {
                 const savedSheets = localStorage.getItem('userAuditSheets');
                 const parsedSheets = savedSheets ? JSON.parse(savedSheets) : {};
@@ -592,6 +680,7 @@
 
         // Helper to find a value by trying multiple possible keys, ignoring case and whitespace.
         const findValue = (item, keys) => {
+            if (!item || typeof item !== 'object') return null;
             const itemKeys = Object.keys(item);
             for (const searchKey of keys) {
                 const normalizedSearchKey = searchKey.trim().toLowerCase();
@@ -605,16 +694,16 @@
 
         const cascadingOptions = useMemo(() => {
             if (data.length === 0) {
-                return { auditors: [], agentIds: [], tlNames: [], sites: [], tenures: [], skills: [] };
+                return { evaluators: [], agentIds: [], tlNames: [], sites: [], tenures: [], skills: [] };
             }
 
             const getOptionsFor = (fieldToGet, currentFilters) => {
                 let tempFilteredData = data;
-                const filterKeys = ['auditor', 'agentId', 'tlName', 'site', 'tenure', 'skill'];
+                const filterKeys = ['evaluator', 'agentId', 'tlName', 'site', 'tenure', 'skill'];
                 const columnMap = {
-                    auditor: ['Auditor QA', 'Auditor'],
-                    agentId: ['Agent ID'],
-                    tlName: ['TL'],
+                    evaluator: ['Evaluator Name', 'Auditor QA', 'Auditor'],
+                    agentId: ['Evaluatee NT Login', 'Agent ID'],
+                    tlName: ['Team Leader', 'TL'],
                     site: ['Site'],
                     tenure: ['Tenure 2'],
                     skill: ['Skill']
@@ -627,7 +716,6 @@
                     }
                     tempFilteredData = tempFilteredData.filter(item => {
                         const value = findValue(item, columnMap[key]);
-                        // For agentId, we need to convert to string for `.includes` to work correctly
                         const filterValue = currentFilters[key].toLowerCase();
                         const itemValue = value ? String(value).toLowerCase() : '';
                         return itemValue.includes(filterValue);
@@ -640,7 +728,7 @@
             };
 
             return {
-                auditors: getOptionsFor('auditor', filters),
+                evaluators: getOptionsFor('evaluator', filters),
                 agentIds: getOptionsFor('agentId', filters),
                 tlNames: getOptionsFor('tlName', filters),
                 sites: getOptionsFor('site', filters),
@@ -700,7 +788,7 @@
             }
         };
 
-        const handleClearFilters = () => setFilters({ auditor: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
+        const handleClearFilters = () => setFilters({ evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '' });
         
         const handleReset = () => {
             setData([]);
@@ -730,18 +818,18 @@
         };
 
         useEffect(() => {
-          let initialData = data.filter(item => findValue(item, ['Status']) === 'TRUE');
-          let filtered = initialData;
-          if (filters.auditor) filtered = filtered.filter(item => {
-              const auditor = findValue(item, ['Auditor QA', 'Auditor']);
-              return auditor && auditor.toLowerCase().includes(filters.auditor.toLowerCase());
+          let auditedData = data.filter(item => findValue(item, ['Status']) === 'Done');
+          let filtered = auditedData;
+          if (filters.evaluator) filtered = filtered.filter(item => {
+              const evaluator = findValue(item, ['Evaluator Name', 'Auditor QA', 'Auditor']);
+              return evaluator && evaluator.toLowerCase().includes(filters.evaluator.toLowerCase());
           });
           if (filters.agentId) filtered = filtered.filter(item => {
-              const agentId = findValue(item, ['Agent ID']);
+              const agentId = findValue(item, ['Evaluatee NT Login', 'Agent ID']);
               return agentId && String(agentId).toLowerCase().includes(filters.agentId.toLowerCase());
           });
           if (filters.tlName) filtered = filtered.filter(item => {
-              const tl = findValue(item, ['TL']);
+              const tl = findValue(item, ['Team Leader', 'TL']);
               return tl && tl.toLowerCase().includes(filters.tlName.toLowerCase());
           });
           if (filters.site) filtered = filtered.filter(item => {
@@ -761,7 +849,7 @@
       
         const handleViewDetails = () => {
             const titleParts = [];
-            if (filters.auditor) titleParts.push(`Auditor: ${filters.auditor}`);
+            if (filters.evaluator) titleParts.push(`Evaluator: ${filters.evaluator}`);
             if (filters.agentId) titleParts.push(`Agent ID: ${filters.agentId}`);
             if (filters.tlName) titleParts.push(`TL: ${filters.tlName}`);
             if (filters.site) titleParts.push(`Site: ${filters.site}`);
@@ -785,17 +873,17 @@
 
 
         const totalAudits = filteredData.length;
-        const totalCE = filteredData.filter(item => findValue(item, ['CE']) === 'TRUE').length;
-        const totalNCE = filteredData.filter(item => findValue(item, ['NCE']) === 'TRUE').length;
-        const totalRTC = filteredData.filter(item => findValue(item, ['RTC']) === 'TRUE').length;
+        const totalCE = filteredData.filter(item => findValue(item, ['CE']) === 'Fail').length;
+        const totalNCE = filteredData.filter(item => findValue(item, ['NCE']) === 'Fail').length;
+        const totalRTCPass = filteredData.filter(item => findValue(item, ['RTC']) === 'Pass').length;
         const cePercentage = totalAudits > 0 ? ((totalCE / totalAudits) * 100) : 0;
         const ncePercentage = totalAudits > 0 ? ((totalNCE / totalAudits) * 100) : 0;
-        const rtcPercentage = totalAudits > 0 ? (100 - ((totalRTC / totalAudits) * 100)) : 0;
+        const rtcPercentage = totalAudits > 0 ? ((totalRTCPass / totalAudits) * 100) : 0;
         
-        const nceTopics = useMemo(() => {
+        const ceTopics = useMemo(() => {
             const topics = filteredData
-                .filter(item => findValue(item, ['NCE']) === 'TRUE')
-                .map(item => findValue(item, ['NCE Topic']))
+                .filter(item => findValue(item, ['CE']) === 'Fail')
+                .map(item => findValue(item, ['CE Topic']))
                 .filter(topic => topic && topic !== 'N/A');
 
             const topicCounts = topics.reduce((acc, topic) => {
@@ -809,8 +897,8 @@
                 .map(([name, value]) => ({ name, value }));
         }, [filteredData]);
 
-        const ceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['CE']) === 'TRUE').map(item => findValue(item, ['Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
-        const nceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['NCE']) === 'TRUE').map(item => findValue(item, ['Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
+        const ceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['CE']) === 'Fail').map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
+        const nceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['NCE']) === 'Fail').map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
         
         const requestSort = (key, config, setConfig) => {
             let direction = 'descending';
@@ -822,13 +910,13 @@
 
         const auditorMetrics = useMemo(() => {
             const auditorData = filteredData.reduce((acc, item) => {
-                const auditorName = findValue(item, ['Auditor QA', 'Auditor']);
+                const auditorName = findValue(item, ['Evaluator Name', 'Auditor QA', 'Auditor']);
                 if (!auditorName) return acc;
-                if (!acc[auditorName]) acc[auditorName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTC: 0 };
+                if (!acc[auditorName]) acc[auditorName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTCPass: 0 };
                 acc[auditorName].totalAudits++;
-                if (findValue(item, ['CE']) === 'TRUE') acc[auditorName].totalCE++;
-                if (findValue(item, ['NCE']) === 'TRUE') acc[auditorName].totalNCE++;
-                if (findValue(item, ['RTC']) === 'TRUE') acc[auditorName].totalRTC++;
+                if (findValue(item, ['CE']) === 'Fail') acc[auditorName].totalCE++;
+                if (findValue(item, ['NCE']) === 'Fail') acc[auditorName].totalNCE++;
+                if (findValue(item, ['RTC']) === 'Pass') acc[auditorName].totalRTCPass++;
                 return acc;
             }, {});
 
@@ -837,7 +925,7 @@
                 totalAudits: metrics.totalAudits,
                 cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
                 ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
-                rtcAccuracy: (metrics.totalAudits > 0 ? 100 - (metrics.totalRTC / metrics.totalAudits) * 100 : 0),
+                rtcAccuracy: (metrics.totalAudits > 0 ? (metrics.totalRTCPass / metrics.totalAudits) * 100 : 0),
             }));
 
             if (auditorSortConfig.key !== null) {
@@ -857,13 +945,13 @@
 
         const tlMetrics = useMemo(() => {
             const tlData = filteredData.reduce((acc, item) => {
-                const tlName = findValue(item, ['TL']);
+                const tlName = findValue(item, ['Team Leader', 'TL']);
                 if (!tlName) return acc;
-                if (!acc[tlName]) acc[tlName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTC: 0 };
+                if (!acc[tlName]) acc[tlName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTCPass: 0 };
                 acc[tlName].totalAudits++;
-                if (findValue(item, ['CE']) === 'TRUE') acc[tlName].totalCE++;
-                if (findValue(item, ['NCE']) === 'TRUE') acc[tlName].totalNCE++;
-                if (findValue(item, ['RTC']) === 'TRUE') acc[tlName].totalRTC++;
+                if (findValue(item, ['CE']) === 'Fail') acc[tlName].totalCE++;
+                if (findValue(item, ['NCE']) === 'Fail') acc[tlName].totalNCE++;
+                if (findValue(item, ['RTC']) === 'Pass') acc[tlName].totalRTCPass++;
                 return acc;
             }, {});
 
@@ -872,7 +960,7 @@
                 totalAudits: metrics.totalAudits,
                 cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
                 ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
-                rtcAccuracy: (metrics.totalAudits > 0 ? 100 - (metrics.totalRTC / metrics.totalAudits) * 100 : 0),
+                rtcAccuracy: (metrics.totalAudits > 0 ? (metrics.totalRTCPass / metrics.totalAudits) * 100 : 0),
             }));
 
             if (tlSortConfig.key !== null) {
@@ -895,7 +983,7 @@
                 case 'total-audits': return '#4f46e5';
                 case 'total-ce': return value > 1 ? '#ef4444' : '#10b981';
                 case 'total-nce': return value > 10 ? '#f97316' : '#10b981';
-                case 'rtc-accuracy': return value > 90 ? '#10b981' : '#ef4444';
+                case 'rtc-accuracy': return value >= 90 ? '#10b981' : '#ef4444';
                 default: return '#6b7280';
             }
         };
@@ -1018,14 +1106,14 @@
                     <CardHeader><CardTitle>Filter Your Data</CardTitle></CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <div className="space-y-1"><Label>Auditor</Label>
+                        <div className="space-y-1"><Label>Evaluator</Label>
                             <SearchableInput 
-                                key={`auditor-${cascadingOptions.auditors.join('')}`}
-                                id="auditor-list" 
-                                value={filters.auditor} 
-                                onChange={e => setFilters(p => ({...p, auditor: e.target.value}))} 
-                                options={cascadingOptions.auditors} 
-                                placeholder="Search Auditor..."/>
+                                key={`evaluator-${cascadingOptions.evaluators.join('')}`}
+                                id="evaluator-list" 
+                                value={filters.evaluator} 
+                                onChange={e => setFilters(p => ({...p, evaluator: e.target.value}))} 
+                                options={cascadingOptions.evaluators} 
+                                placeholder="Search Evaluator..."/>
                         </div>
                         <div className="space-y-1"><Label>Agent ID</Label>
                             <SearchableInput 
@@ -1036,7 +1124,7 @@
                                 options={cascadingOptions.agentIds} 
                                 placeholder="Search Agent ID..."/>
                         </div>
-                        <div className="space-y-1"><Label>TL Name</Label>
+                        <div className="space-y-1"><Label>Team Leader</Label>
                             <SearchableInput 
                                 key={`tlName-${cascadingOptions.tlNames.join('')}`}
                                 id="tl-list" 
@@ -1096,9 +1184,9 @@
                     <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
                   </div>
       
-                  {cardVisibility.auditorPerformance && <CollapsibleCard title="Auditor Performance Breakdown" accentColor="#3b82f6">
+                  {cardVisibility.evaluatorPerformance && <CollapsibleCard title="Evaluator Performance Breakdown" accentColor="#3b82f6">
                       <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
-                          <div className="text-left font-semibold text-gray-300 col-span-2">Auditor</div>
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Evaluator</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
@@ -1122,7 +1210,7 @@
 
                   {cardVisibility.tlPerformance && <CollapsibleCard title="TL Performance Breakdown" accentColor="#10b981">
                       <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
-                          <div className="text-left font-semibold text-gray-300 col-span-2">Team Lead</div>
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Team Leader</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
@@ -1151,8 +1239,8 @@
                     {cardVisibility.topNceHolders && <CollapsibleCard title="Top 5 NCE Holders" accentColor="#f97316">
                         <div className="h-64"><BarChart data={nceHolders} barColor="linear-gradient(to right, #f97316, #fbbf24)" /></div>
                     </CollapsibleCard>}
-                    {cardVisibility.topNceTopics && <CollapsibleCard title="Top 5 NCE Topics" accentColor="#f97316" defaultMinimized={true}>
-                        <div className="h-64"><BarChart data={nceTopics} barColor="linear-gradient(to right, #f97316, #fbbf24)" /></div>
+                    {cardVisibility.topCeTopics && <CollapsibleCard title="Top 5 CE Topics" accentColor="#ef4444" defaultMinimized={true}>
+                        <div className="h-64"><BarChart data={ceTopics} barColor="linear-gradient(to right, #ef4444, #dc2626)" /></div>
                     </CollapsibleCard>}
                   </div>
                 </main>
