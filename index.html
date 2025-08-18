@@ -872,6 +872,14 @@
             }
         };
 
+        const handleRefresh = () => {
+            const urlToRefresh = googleSheetUrl === 'custom' ? customGoogleSheetUrl : googleSheetUrl;
+            if (urlToRefresh) {
+                showToast('Refreshing data...', 'info');
+                handleUrlLoad(urlToRefresh);
+            }
+        };
+
         const handleClearFilters = () => {
             clearFilters();
             showToast('Filters cleared', 'info');
@@ -1266,7 +1274,7 @@
                         <div className="space-y-1"><Label htmlFor="start-date">Start Date</Label><Input id="start-date" type="date" value={filters.startDate} onChange={e => setFilters(p => ({...p, startDate: e.target.value}))} /></div>
                         <div className="space-y-1"><Label htmlFor="end-date">End Date</Label><Input id="end-date" type="date" value={filters.endDate} onChange={e => setFilters(p => ({...p, endDate: e.target.value}))} /></div>
                       </div>
-                      <div className="mt-4 flex justify-end gap-4">
+                      <div className="mt-4 flex flex-wrap justify-end gap-4">
                           <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70">
                               View Details
                           </Button>
@@ -1274,9 +1282,14 @@
                               Clear Filters
                           </Button>
                           {data.length > 0 && (
-                            <Button onClick={handleReset} className="from-red-600 to-pink-500 hover:from-red-700 hover:to-pink-600">
-                                Reset Data
-                            </Button>
+                            <>
+                                <Button onClick={handleRefresh} disabled={inputType !== 'googleSheet'} className="from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70">
+                                    Refresh
+                                </Button>
+                                <Button onClick={handleReset} className="from-red-600 to-pink-500 hover:from-red-700 hover:to-pink-600">
+                                    Reset Data
+                                </Button>
+                            </>
                           )}
                       </div>
                     </CardContent>
