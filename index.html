@@ -18,21 +18,27 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-retro: 'Orbitron', sans-serif;
+        }
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* --- THEME: Dark (Default) --- */
+        body.theme-dark {
             color: #e5e7eb; /* Lighter text for dark bg */
             background-color: #111827; /* Fallback color */
         }
-
-        #background-container {
+        body.theme-dark #background-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -40,6 +46,177 @@
             -webkit-filter: blur(8px);
             z-index: -1;
             transition: background-image 0.5s ease-in-out;
+        }
+        .theme-dark .themed-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .theme-dark .themed-input {
+            border: 1px solid #374151; /* gray-700 */
+            background-color: rgba(0,0,0,0.2);
+            color: #e5e7eb;
+        }
+        .theme-dark .themed-input:focus {
+            --tw-ring-color: #6366f1; /* indigo-500 */
+        }
+        .theme-dark .themed-button {
+            background-image: linear-gradient(to right, var(--tw-gradient-stops));
+            --tw-gradient-from: #4f46e5;
+            --tw-gradient-to: #3b82f6;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .theme-dark .themed-button:hover {
+            --tw-gradient-from: #4338ca;
+            --tw-gradient-to: #2563eb;
+        }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #4f46e5; }
+        .theme-dark ::-webkit-scrollbar-thumb:hover { background: #4338ca; }
+        .theme-dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+        /* --- THEME: Neumorphism --- */
+        body.theme-neumorphism {
+            color: #374151;
+            background-color: #e0e5ec;
+        }
+        .theme-neumorphism .themed-card {
+            background: #e0e5ec;
+            box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+        }
+        .theme-neumorphism .themed-input {
+            background: #e0e5ec;
+            border: 1px solid transparent;
+            color: #374151;
+            box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+        }
+        .theme-neumorphism .themed-input:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            --tw-ring-offset-shadow: none;
+            --tw-ring-shadow: none;
+            box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff;
+        }
+        .theme-neumorphism .themed-button {
+            color: #374151;
+            background: #e0e5ec;
+            box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+            font-weight: 600;
+        }
+        .theme-neumorphism .themed-button:hover {
+             box-shadow: 3px 3px 6px #a3b1c6, -3px -3px 6px #ffffff;
+        }
+        .theme-neumorphism .themed-button:active {
+            box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+        }
+        .theme-neumorphism h1, .theme-neumorphism h3, .theme-neumorphism .text-gray-100 { color: #374151 !important; }
+        .theme-neumorphism .text-gray-200, .theme-neumorphism .text-gray-300 { color: #525a66 !important; }
+        .theme-neumorphism .text-gray-400 { color: #828a96 !important; }
+        .theme-neumorphism ::-webkit-scrollbar-thumb { background: #a3b1c6; }
+        .theme-neumorphism ::-webkit-scrollbar-thumb:hover { background: #8e9aae; }
+        .theme-neumorphism input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+        .theme-neumorphism .themed-table-header { background-color: rgba(0,0,0,0.05); }
+        .theme-neumorphism .themed-table-row:hover { background-color: rgba(0,0,0,0.03); }
+
+        /* --- THEME: Retro Futurism --- */
+        body.theme-retro-futurism {
+            color: #00f2ea;
+            background-color: #0d0221;
+            background-image: linear-gradient(rgba(38, 23, 74, 0.5) 1px, transparent 1px), linear-gradient(to right, rgba(38, 23, 74, 0.5) 1px, #0d0221 1px);
+            background-size: 40px 40px;
+        }
+        .theme-retro-futurism h1, .theme-retro-futurism h3, .theme-retro-futurism .themed-button, .theme-retro-futurism .retro-title {
+            font-family: var(--font-retro);
+        }
+        .theme-retro-futurism h1, .theme-retro-futurism h3 {
+            text-shadow: 0 0 5px #f0f, 0 0 10px #f0f;
+            color: #fff;
+        }
+        .theme-retro-futurism .themed-card {
+            background: rgba(26, 12, 59, 0.8);
+            border: 1px solid #ff00ff;
+            box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.5), 0 0 10px rgba(255, 0, 255, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 0;
+        }
+        .theme-retro-futurism .themed-input {
+            background: transparent;
+            border: 1px solid #00f2ea;
+            color: #00f2ea;
+            border-radius: 0;
+        }
+        .theme-retro-futurism .themed-input::placeholder { color: rgba(0, 242, 234, 0.4); }
+        .theme-retro-futurism .themed-input:focus {
+            outline: none;
+            box-shadow: 0 0 8px #00f2ea;
+            --tw-ring-shadow: none;
+        }
+        .theme-retro-futurism .themed-button {
+            color: #0d0221;
+            background: #00f2ea;
+            border: 1px solid #00f2ea;
+            box-shadow: 0 0 8px #00f2ea, inset 0 0 5px rgba(255,255,255,0.5);
+            border-radius: 0;
+            transition: all 0.2s ease-in-out;
+            transform: skew(-15deg);
+        }
+        .theme-retro-futurism .themed-button > * { transform: skew(15deg); }
+        .theme-retro-futurism .themed-button:hover {
+             background: #ff00ff;
+             color: #fff;
+             border-color: #ff00ff;
+             box-shadow: 0 0 15px #ff00ff, 0 0 25px #ff00ff, inset 0 0 5px rgba(255,255,255,0.5);
+        }
+        .theme-retro-futurism ::-webkit-scrollbar-thumb { background: #ff00ff; }
+        .theme-retro-futurism input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) hue-rotate(90deg) brightness(1.5); }
+        .theme-retro-futurism .themed-table-header { background-color: rgba(255,0,255,0.2); }
+        .theme-retro-futurism .themed-table-row:hover { background-color: rgba(0, 242, 234, 0.1); }
+        
+        /* --- THEME: Corporate Dark --- */
+        body.theme-corporate {
+            color: #e0e0e0;
+            background-color: #121212;
+        }
+        .theme-corporate .themed-card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .theme-corporate .themed-input {
+            background: #252525;
+            border: 1px solid #444;
+            color: #e0e0e0;
+        }
+        .theme-corporate .themed-input:focus {
+            border-color: #007acc;
+            --tw-ring-color: rgba(0, 122, 204, 0.5);
+        }
+        .theme-corporate .themed-button {
+            background: #007acc;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: none;
+        }
+        .theme-corporate .themed-button:hover {
+            background: #008ae6;
+        }
+        .theme-corporate h1, .theme-corporate h3, .theme-corporate .text-gray-100 { color: #ffffff !important; }
+        .theme-corporate .text-gray-200, .theme-corporate .text-gray-300 { color: #b0b0b0 !important; }
+        .theme-corporate .text-gray-400 { color: #888888 !important; }
+        .theme-corporate ::-webkit-scrollbar-thumb { background: #007acc; }
+        .theme-corporate ::-webkit-scrollbar-thumb:hover { background: #005c99; }
+        .theme-corporate input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .theme-corporate .themed-table-header { background-color: #2a2a2a; }
+        .theme-corporate .themed-table-row:hover { background-color: #2c2c2c; }
+
+
+        body:not(.theme-dark) #background-container {
+            display: none;
         }
 
         /* Keyframe animations for a dynamic feel */
@@ -84,25 +261,9 @@
             animation: pulse 0.5s ease-in-out;
         }
 
-        /* Glassmorphism effect for cards */
-        .glass-card {
-            background: rgba(17, 24, 39, 0.7); /* Darker, less transparent background for better readability */
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
         /* Custom scrollbar for a polished look */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
-        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4338ca; }
-
-        /* Date picker icon color */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-        }
         
         /* Style for card being captured */
         .capturing-card {
@@ -122,7 +283,7 @@
       const Card = forwardRef(({ className = '', children, accentColor }, ref) => (
         <div 
           ref={ref}
-          className={`rounded-2xl glass-card text-gray-200 transition-all duration-300 hover:shadow-2xl ${className}`}
+          className={`rounded-2xl themed-card text-gray-200 transition-all duration-300 hover:shadow-2xl ${className}`}
           style={{ borderTop: `4px solid ${accentColor || 'transparent'}` }}
         >
           {children}
@@ -133,7 +294,7 @@
       const CardContent = ({ className = '', children }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
       const Label = ({ className = '', children, htmlFor }) => <label className={`text-sm font-medium leading-none text-gray-300 ${className}`} htmlFor={htmlFor}>{children}</label>;
       
-      const Input = ({ className = '', type = 'text', ...props }) => <input type={type} className={`h-10 w-full rounded-lg border border-gray-700 bg-black/20 px-3 py-2 text-sm text-gray-200 ring-offset-gray-900 file:border-0 file:text-sm file:font-medium placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ${className}`} {...props} />;
+      const Input = ({ className = '', type = 'text', ...props }) => <input type={type} className={`h-10 w-full rounded-lg themed-input px-3 py-2 text-sm ring-offset-gray-900 file:border-0 file:text-sm file:font-medium placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 ${className}`} {...props} />;
       
       const SearchableInput = ({ value, onChange, options, id, placeholder }) => (
           <div className="relative">
@@ -143,7 +304,7 @@
       );
 
       const Button = ({ className = '', children, ...props }) => (
-        <button className={`inline-flex items-center justify-center rounded-lg text-sm font-semibold ring-offset-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-700 hover:to-blue-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 h-10 px-4 py-2 ${className}`} {...props}>
+        <button className={`inline-flex items-center justify-center rounded-lg text-sm font-semibold ring-offset-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 themed-button h-10 px-4 py-2 ${className}`} {...props}>
           {children}
         </button>
       );
@@ -152,7 +313,7 @@
           const [isMinimized, setIsMinimized] = useState(defaultMinimized);
 
           return (
-              <Card accentColor={accentColor} ref={cardRef}>
+              <Card accentColor={accentColor} ref={cardRef} className="themed-card">
                   <div className="flex items-center justify-between p-6">
                       <CardTitle className="cursor-pointer flex-1" onClick={() => setIsMinimized(!isMinimized)}>{title}</CardTitle>
                       <div className="flex items-center gap-2">
@@ -252,10 +413,45 @@
                   </button>
               </div>
           );
-      };
+        };
+
+        // --- Theme Option Component ---
+        const ThemeOption = ({ name, value, currentTheme, onSelect }) => {
+            const isSelected = currentTheme === value;
+            let previewClasses = '';
+            let textClasses = '';
+            switch (value) {
+                case 'dark':
+                    previewClasses = 'bg-gray-800 border-indigo-500';
+                    textClasses = 'text-gray-200';
+                    break;
+                case 'corporate':
+                    previewClasses = 'bg-[#1e1e1e] border-blue-500';
+                    textClasses = 'text-gray-200';
+                    break;
+                case 'neumorphism':
+                    previewClasses = 'bg-[#e0e5ec] border-gray-400 shadow-inner';
+                    textClasses = 'text-gray-700';
+                    break;
+                case 'retro-futurism':
+                    previewClasses = 'bg-[#0d0221] border-pink-500';
+                    textClasses = 'text-pink-400 retro-title';
+                    break;
+            }
+
+            return (
+                <div 
+                    onClick={() => onSelect(value)}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 ${isSelected ? 'ring-4 ring-offset-2 ring-offset-gray-800 ring-indigo-500 border-transparent' : 'border-gray-700 hover:border-gray-500'}`}
+                >
+                    <div className={`h-16 w-full rounded-md ${previewClasses} mb-2`}></div>
+                    <p className={`text-center font-semibold ${textClasses}`}>{name}</p>
+                </div>
+            );
+        }
 
       // --- Settings Page Component ---
-      const SettingsView = ({ onBack, userSheets, onAddSheet, onDeleteSheet, cardVisibility, onVisibilityChange, backgroundOptions, currentBackground, onBackgroundChange, showToast }) => {
+      const SettingsView = ({ onBack, userSheets, onAddSheet, onDeleteSheet, cardVisibility, onVisibilityChange, backgroundOptions, currentBackground, onBackgroundChange, showToast, theme, onThemeChange }) => {
           const [newName, setNewName] = useState('');
           const [newUrl, setNewUrl] = useState('');
           const [editingUrl, setEditingUrl] = useState(null);
@@ -293,16 +489,28 @@
               <div className="max-w-4xl mx-auto space-y-8 fade-in p-4 sm:p-0">
                   <header className="flex items-center justify-between py-4">
                       <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">Settings</h1>
-                      <Button onClick={onBack} className="from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700">
+                      <Button onClick={onBack} className="themed-button from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
                           Back to Dashboard
                       </Button>
                   </header>
 
-                  <Card>
+                  <Card className="themed-card">
+                      <CardHeader><CardTitle>Theme</CardTitle></CardHeader>
+                      <CardContent>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                              <ThemeOption name="Dark" value="dark" currentTheme={theme} onSelect={onThemeChange} />
+                              <ThemeOption name="Corporate" value="corporate" currentTheme={theme} onSelect={onThemeChange} />
+                              <ThemeOption name="Neumorphism" value="neumorphism" currentTheme={theme} onSelect={onThemeChange} />
+                              <ThemeOption name="Retro Futurism" value="retro-futurism" currentTheme={theme} onSelect={onThemeChange} />
+                          </div>
+                      </CardContent>
+                  </Card>
+
+                  <Card className="themed-card">
                       <CardHeader><CardTitle>Appearance</CardTitle></CardHeader>
                       <CardContent>
-                          <Label>Change Background</Label>
+                          <Label>Change Background (Dark Theme Only)</Label>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
                               {backgroundOptions.map(bg => (
                                   <div key={bg.name} onClick={() => onBackgroundChange(bg.url)} className={`relative rounded-lg overflow-hidden cursor-pointer aspect-video transition-all duration-200 ${currentBackground === bg.url ? 'ring-4 ring-indigo-500' : 'ring-2 ring-transparent hover:ring-indigo-400'}`}>
@@ -316,7 +524,7 @@
                       </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="themed-card">
                       <CardHeader><CardTitle>Dashboard Visibility</CardTitle></CardHeader>
                       <CardContent>
                           <div className="grid grid-cols-2 gap-4">
@@ -332,7 +540,7 @@
                       </CardContent>
                   </Card>
                   
-                  <Card>
+                  <Card className="themed-card">
                       <CardHeader><CardTitle>Data Sources (Google Sheets)</CardTitle></CardHeader>
                       <CardContent>
                           <div className="space-y-4">
@@ -391,7 +599,7 @@
 
           return (
               <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center fade-in">
-                  <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
+                  <div className="themed-card bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm m-4 fade-in-up" style={{animationDuration: '0.4s'}}>
                       <div className="flex justify-between items-center p-4 border-b border-gray-700">
                           <h2 className="text-xl font-bold text-gray-100">Enter PIN</h2>
                           <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
@@ -414,7 +622,7 @@
                           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
                       </div>
                       <div className="p-4 bg-gray-900/50 rounded-b-xl">
-                          <Button onClick={onSubmit} className="w-full">
+                          <Button onClick={onSubmit} className="w-full themed-button">
                               Submit
                           </Button>
                       </div>
@@ -436,7 +644,7 @@
 
           return (
               <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center fade-in" onClick={onClose}>
-                  <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-2xl m-4 fade-in-up" style={{animationDuration: '0.4s'}} onClick={e => e.stopPropagation()}>
+                  <div className="themed-card border border-gray-700 rounded-xl shadow-2xl w-full max-w-2xl m-4 fade-in-up" style={{animationDuration: '0.4s'}} onClick={e => e.stopPropagation()}>
                       <div className="flex justify-between items-center p-4 border-b border-gray-700">
                           <h2 className="text-xl font-bold text-gray-100">Record Details</h2>
                           <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
@@ -557,21 +765,21 @@
                                 onChange={e => setSearchTerm(e.target.value)}
                                 className="w-full sm:w-64"
                             />
-                            <Button onClick={handleDownload} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 flex-shrink-0">
+                            <Button onClick={handleDownload} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 flex-shrink-0 themed-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                 <span className="hidden sm:inline">Download</span>
                             </Button>
-                            <Button onClick={onBack} className="from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 flex-shrink-0">
+                            <Button onClick={onBack} className="from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 flex-shrink-0 themed-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
                                 <span className="hidden sm:inline">Back</span>
                             </Button>
                         </div>
                     </header>
-                    <Card accentColor="#4f46e5">
+                    <Card accentColor="#4f46e5" className="themed-card">
                         <CardContent>
                             <div className="overflow-auto max-h-[75vh]">
                                 <table className="w-full text-sm text-left text-gray-300">
-                                    <thead className="text-xs text-gray-300 uppercase bg-white/5 sticky top-0 z-10">
+                                    <thead className="text-xs text-gray-300 uppercase themed-table-header sticky top-0 z-10">
                                         <tr>
                                             <th scope="col" className="px-4 py-3">Calling Date & Time</th>
                                             <th scope="col" className="px-4 py-3">Calling Number</th>
@@ -594,7 +802,7 @@
                                             const rtcStatus = findValue(item, ['STS', 'RTC']) || 'N/A';
                                             
                                             return (
-                                                <tr key={index} className="border-b border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => handleRowClick(item)}>
+                                                <tr key={index} className="border-b border-gray-800 themed-table-row cursor-pointer" onClick={() => handleRowClick(item)}>
                                                     <td className="px-4 py-4 font-medium text-gray-100 whitespace-nowrap">{findValue(item, ['Local Start Time']) || 'N/A'}</td>
                                                     <td className="px-4 py-4">{findValue(item, ['Calling Number']) || 'N/A'}</td>
                                                     <td className="px-4 py-4">{findValue(item, ['Audit Date']) || 'N/A'}</td>
@@ -631,7 +839,8 @@
         ];
 
         const initialFilters = { evaluator: '', agentId: '', tlName: '', site: '', tenure: '', skill: '', startDate: '', endDate: '' };
-
+        
+        const [theme, setTheme] = useState(() => localStorage.getItem('dashboardTheme') || 'dark');
         const [initialState] = useState(() => {
             try {
                 const savedState = localStorage.getItem('auditDashboardState');
@@ -689,6 +898,13 @@
             document.getElementById('background-container').style.backgroundImage = `url('${currentBackground}')`;
             localStorage.setItem('dashboardBackground', currentBackground);
         }, [currentBackground]);
+
+        useEffect(() => {
+            // Set the class on the body element
+            document.body.className = ''; // Clear existing theme classes
+            document.body.classList.add(`theme-${theme}`);
+            localStorage.setItem('dashboardTheme', theme);
+        }, [theme]);
 
         useEffect(() => {
             if (data.length > 0) {
@@ -1286,6 +1502,8 @@
                         currentBackground={currentBackground}
                         onBackgroundChange={setCurrentBackground}
                         showToast={showToast}
+                        theme={theme}
+                        onThemeChange={setTheme}
                     />
                 </div>
             );
@@ -1303,7 +1521,7 @@
                 error={pinError}
             />
             <div className="max-w-7xl mx-auto space-y-8">
-              <header className="glass-card text-white p-6 rounded-2xl shadow-2xl fade-in-down relative">
+              <header className="themed-card text-white p-6 rounded-2xl shadow-2xl fade-in-down relative">
                 <div className="text-center">
                     <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Audit Dashboard</h1>
                     <p className="text-gray-300 mt-2 text-lg">Your data, beautifully visualized.</p>
@@ -1332,13 +1550,13 @@
 
                     {inputType === 'googleSheet' && (
                         <div className="space-y-2 w-full max-w-xl mx-auto pt-2 fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <select value={googleSheetUrl} onChange={e => { const url = e.target.value; setGoogleSheetUrl(url); if (url !== "custom" && url !== "") { handleUrlLoad(url); }}} className="h-10 w-full rounded-md border border-gray-700 bg-black/20 px-3 py-2 text-sm text-gray-200 ring-offset-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select value={googleSheetUrl} onChange={e => { const url = e.target.value; setGoogleSheetUrl(url); if (url !== "custom" && url !== "") { handleUrlLoad(url); }}} className="h-10 w-full rounded-md themed-input px-3 py-2 text-sm ring-offset-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 {Object.entries(allSheetOptions).map(([url, name]) => ( <option key={url} value={url} className="bg-gray-800 text-gray-200">{name}</option>))}
                             </select>
                             {googleSheetUrl === 'custom' && (
                                 <div className="flex items-center justify-center gap-2 w-full fade-in-up" style={{animationDuration: '0.3s'}}>
                                     <Input type="text" value={customGoogleSheetUrl} onChange={e => setCustomGoogleSheetUrl(e.target.value)} placeholder="Paste public CSV URL and press Load" className="w-full"/>
-                                    <Button onClick={() => handleUrlLoad(customGoogleSheetUrl)} className="flex-shrink-0">Load</Button>
+                                    <Button onClick={() => handleUrlLoad(customGoogleSheetUrl)} className="flex-shrink-0 themed-button">Load</Button>
                                 </div>
                             )}
                         </div>
@@ -1361,7 +1579,7 @@
       
               {(data.length > 0 || isLoading) && (
                 <main className="space-y-8 fade-in-up">
-                  <Card accentColor="#4f46e5">
+                  <Card accentColor="#4f46e5" className="themed-card">
                     <CardHeader><CardTitle>Filter Your Data</CardTitle></CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -1423,18 +1641,18 @@
                         <div className="space-y-1"><Label htmlFor="end-date">End Date</Label><Input id="end-date" type="date" value={filters.endDate} onChange={e => setFilters(p => ({...p, endDate: e.target.value}))} /></div>
                       </div>
                       <div className="mt-4 flex flex-wrap justify-end gap-4">
-                          <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70">
+                          <Button onClick={handleViewDetails} disabled={!isDetailViewEnabled} className="from-green-500 to-teal-400 hover:from-green-600 hover:to-teal-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70 themed-button">
                               View Details
                           </Button>
-                          <Button onClick={handleClearFilters} className="from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500">
+                          <Button onClick={handleClearFilters} className="from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 themed-button">
                               Clear Filters
                           </Button>
                           {data.length > 0 && (
                             <>
-                                <Button onClick={handleRefresh} disabled={inputType !== 'googleSheet'} className="from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70">
+                                <Button onClick={handleRefresh} disabled={inputType !== 'googleSheet'} className="from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:opacity-70 themed-button">
                                     Refresh
                                 </Button>
-                                <Button onClick={handleReset} className="from-red-600 to-pink-500 hover:from-red-700 hover:to-pink-600">
+                                <Button onClick={handleReset} className="from-red-600 to-pink-500 hover:from-red-700 hover:to-pink-600 themed-button">
                                     Reset Data
                                 </Button>
                             </>
@@ -1444,10 +1662,10 @@
                   </Card>
       
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card accentColor={getAccentColor('total-audits')}><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-400"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
-                    <Card accentColor={getAccentColor('total-ce', cePercentage)}><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-400"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
-                    <Card accentColor={getAccentColor('total-nce', ncePercentage)}><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-400"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
-                    <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-audits')} className="themed-card"><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-400"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-ce', cePercentage)} className="themed-card"><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-400"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
+                    <Card accentColor={getAccentColor('total-nce', ncePercentage)} className="themed-card"><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-400"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
+                    <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)} className="themed-card"><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
                   </div>
       
                   {cardVisibility.evaluatorPerformance && <CollapsibleCard 
@@ -1456,7 +1674,7 @@
                       cardRef={evaluatorCardRef}
                       onDownload={() => handleDownloadImage(evaluatorCardRef, 'evaluator-performance')}
                     >
-                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Evaluator</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
@@ -1467,7 +1685,7 @@
                       </div>
                       <div className="space-y-2 mt-2">
                           {auditorMetrics.map((auditor, index) => (
-                              <div key={auditor.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={auditor.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
                                       <span className="font-bold text-indigo-300 bg-indigo-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
                                       <span className="font-semibold text-gray-200 truncate">{auditor.name}</span>
@@ -1489,7 +1707,7 @@
                       cardRef={tlCardRef}
                       onDownload={() => handleDownloadImage(tlCardRef, 'tl-performance')}
                     >
-                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Team Leader</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
@@ -1500,7 +1718,7 @@
                       </div>
                       <div className="space-y-2 mt-2">
                           {tlMetrics.map((tl, index) => (
-                              <div key={tl.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={tl.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
                                       <span className="font-bold text-green-300 bg-green-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
                                       <span className="font-semibold text-gray-200 truncate">{tl.name}</span>
@@ -1522,7 +1740,7 @@
                       cardRef={skillCardRef}
                       onDownload={() => handleDownloadImage(skillCardRef, 'skill-performance')}
                     >
-                      <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                      <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Skill</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
                           <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
@@ -1532,7 +1750,7 @@
                       </div>
                       <div className="space-y-2 mt-2">
                           {skillMetrics.map((skill, index) => (
-                              <div key={skill.name} className="grid grid-cols-7 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={skill.name} className="grid grid-cols-7 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
                                       <span className="font-bold text-purple-300 bg-purple-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
                                       <span className="font-semibold text-gray-200 truncate">{skill.name}</span>
