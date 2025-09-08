@@ -13,6 +13,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- XLSX library from CDN -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- html2canvas for image capture -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,6 +103,12 @@
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
         }
+        
+        /* Style for card being captured */
+        .capturing-card {
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.7) !important; /* Teal glow */
+            transition: box-shadow 0.2s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -108,17 +116,18 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect, useMemo, useRef, useCallback } = React;
+      const { useState, useEffect, useMemo, useRef, useCallback, forwardRef } = React;
       
       // --- Reusable UI Components ---
-      const Card = ({ className = '', children, accentColor }) => (
+      const Card = forwardRef(({ className = '', children, accentColor }, ref) => (
         <div 
+          ref={ref}
           className={`rounded-2xl glass-card text-gray-200 transition-all duration-300 hover:shadow-2xl ${className}`}
           style={{ borderTop: `4px solid ${accentColor || 'transparent'}` }}
         >
           {children}
         </div>
-      );
+      ));
       const CardHeader = ({ className = '', children }) => <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>;
       const CardTitle = ({ className = '', children }) => <h3 className={`text-xl font-bold leading-none tracking-tight text-gray-100 ${className}`}>{children}</h3>;
       const CardContent = ({ className = '', children }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
@@ -139,18 +148,25 @@
         </button>
       );
 
-      const CollapsibleCard = ({ title, accentColor, children, defaultMinimized = false }) => {
+      const CollapsibleCard = ({ title, accentColor, children, onDownload, defaultMinimized = false, cardRef }) => {
           const [isMinimized, setIsMinimized] = useState(defaultMinimized);
 
           return (
-              <Card accentColor={accentColor}>
-                  <div className="flex items-center justify-between p-6 cursor-pointer" onClick={() => setIsMinimized(!isMinimized)}>
-                      <CardTitle>{title}</CardTitle>
-                      <button className="text-indigo-400 hover:text-indigo-300 transition-transform duration-300" style={{ transform: isMinimized ? 'rotate(0deg)' : 'rotate(-180deg)' }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                      </button>
+              <Card accentColor={accentColor} ref={cardRef}>
+                  <div className="flex items-center justify-between p-6">
+                      <CardTitle className="cursor-pointer flex-1" onClick={() => setIsMinimized(!isMinimized)}>{title}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        {onDownload && (
+                            <button onClick={onDownload} title="Download this card as an image" className="text-teal-400 hover:text-teal-300 transition-colors p-1 rounded-full hover:bg-white/10">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            </button>
+                        )}
+                        <button onClick={() => setIsMinimized(!isMinimized)} className="text-indigo-400 hover:text-indigo-300 transition-transform duration-300 p-1" style={{ transform: isMinimized ? 'rotate(0deg)' : 'rotate(-180deg)' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                      </div>
                   </div>
                   <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isMinimized ? 'max-h-0' : 'max-h-[1000px]'}`}>
                       <div className="p-6 pt-0">
@@ -441,7 +457,7 @@
                           <div className="grid grid-cols-3 gap-4">
                               <DetailItem label="NCE" value={findValue(record, ['NCE'])} />
                               <DetailItem label="CE" value={findValue(record, ['CE'])} />
-                              <DetailItem label="RTC" value={findValue(record, ['RTC'])} />
+                              <DetailItem label="RTC" value={findValue(record, ['STS', 'RTC'])} />
                           </div>
                           <div>
                               <p className="text-sm font-medium text-gray-400">QA Comments</p>
@@ -504,7 +520,7 @@
                   "QA Name": findValue(item, ['Evaluator Name', 'Auditor QA']),
                   "NCE": findValue(item, ['NCE']),
                   "CE": findValue(item, ['CE']),
-                  "RTC": findValue(item, ['RTC']),
+                  "RTC": findValue(item, ['STS', 'RTC']),
                   "CE Topic": findValue(item, ['CE Topic']),
                   "QA Comments": findValue(item, ['QA Comments'])
               }));
@@ -515,9 +531,10 @@
           };
 
           const getStatusColor = (status) => {
-              if (status === 'Fail') return 'bg-red-900/50 text-red-300';
-              if (status === 'Pass') return 'bg-green-900/50 text-green-300';
-              if (status === 'Missing') return 'bg-yellow-900/50 text-yellow-300';
+              const lowerStatus = String(status || '').toLowerCase();
+              if (lowerStatus === 'fail') return 'bg-red-900/50 text-red-300';
+              if (lowerStatus === 'pass') return 'bg-green-900/50 text-green-300';
+              if (lowerStatus === 'missing') return 'bg-yellow-900/50 text-yellow-300';
               return 'bg-gray-700 text-gray-300';
           };
 
@@ -574,7 +591,7 @@
                                         {filteredDetails.map((item, index) => {
                                             const nceStatus = findValue(item, ['NCE']) || 'N/A';
                                             const ceStatus = findValue(item, ['CE']) || 'N/A';
-                                            const rtcStatus = findValue(item, ['RTC']) || 'N/A';
+                                            const rtcStatus = findValue(item, ['STS', 'RTC']) || 'N/A';
                                             
                                             return (
                                                 <tr key={index} className="border-b border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => handleRowClick(item)}>
@@ -646,12 +663,21 @@
         const [pinError, setPinError] = useState('');
         const [auditorSortConfig, setAuditorSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
         const [tlSortConfig, setTlSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
+        const [skillSortConfig, setSkillSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
         
         const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'detail', 'settings'
         const [detailData, setDetailData] = useState(null);
         const [detailTitle, setDetailTitle] = useState('');
 
         const [toast, setToast] = useState(null);
+        
+        // --- Refs for downloading individual cards ---
+        const evaluatorCardRef = useRef(null);
+        const tlCardRef = useRef(null);
+        const skillCardRef = useRef(null);
+        const ceHoldersCardRef = useRef(null);
+        const nceHoldersCardRef = useRef(null);
+        const ceTopicsCardRef = useRef(null);
 
         const showToast = useCallback((message, type = 'info') => {
             setToast({ id: Date.now(), message, type });
@@ -686,7 +712,8 @@
             const savedVisibility = localStorage.getItem('cardVisibility');
             const defaultVisibility = {
                 evaluatorPerformance: true,
-                tlPerformance: false,
+                tlPerformance: true,
+                skillPerformance: true,
                 topCeHolders: true,
                 topNceHolders: true,
                 topCeTopics: true,
@@ -705,19 +732,31 @@
         };
         
         const [userSheetOptions, setUserSheetOptions] = useState(() => {
-            const arifSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc-C8laLadVQw5LfI-liTMtWdUBURDuUmTmNRNHHuqZrC-vWVEwYJdvLh-YCaiUViMRepVXu9qP9qL/pub?gid=0&single=true&output=csv";
-            const gpSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPOIS24AoFgLGukHhFXgOuDrm9XRDRKMADoFSNnYk8o4dAr3g0lTiEav898Ndfa-P4zJbewsouYnxz/pub?gid=0&single=true&output=csv";
-            const defaultCustomSheet = { 
-                [arifSheetUrl]: "Arif's Sheet",
-                [gpSheetUrl]: "GP Sample File"
+            const oldArifSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc-C8laLadVQw5LfI-liTMtWdUBURDuUmTmNRNHHuqZrC-vWVEwYJdvLh-YCaiUViMRepVXu9qP9qL/pub?gid=0&single=true&output=csv";
+            const oldGpSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPOIS24AoFgLGukHhFXgOuDrm9XRDRKMADoFSNnYk8o4dAr3g0lTiEav898Ndfa-P4zJbewsouYnxz/pub?gid=0&single=true&output=csv";
+            
+            const newDefaultSheet = {
+                "https://docs.google.com/spreadsheets/d/e/2PACX-1vSeOFrNqxNl56W4UmktKyP2lfl-Ficu_7edII44AImV_XKBqnIT-gmUjG2C2KbY4lyPDXYe0g1Mg7Cw/pub?gid=0&single=true&output=csv": "GP Sample Audit Sep'25"
             };
+
             try {
                 const savedSheets = localStorage.getItem('userAuditSheets');
-                const parsedSheets = savedSheets ? JSON.parse(savedSheets) : {};
-                return { ...defaultCustomSheet, ...parsedSheets };
+                let sheets = savedSheets ? JSON.parse(savedSheets) : newDefaultSheet;
+
+                // Remove the old default sheets if they exist in the loaded data
+                delete sheets[oldArifSheetUrl];
+                delete sheets[oldGpSheetUrl];
+
+                // If the list becomes empty after deletion, add the new default
+                if (Object.keys(sheets).length === 0) {
+                    sheets = newDefaultSheet;
+                }
+
+                return sheets;
+
             } catch (e) {
                 console.error("Failed to parse user sheets from localStorage", e);
-                return defaultCustomSheet;
+                return newDefaultSheet; // Fallback to the new default on error
             }
         });
 
@@ -912,8 +951,45 @@
             }
         };
 
+        const handleDownloadImage = (elementRef, fileName) => {
+            const element = elementRef.current;
+            if (!element) return;
+            
+            showToast('Preparing image...', 'info');
+            
+            // Temporarily add a class for visual feedback and adjust height
+            element.classList.add('capturing-card');
+            const originalHeight = element.style.height;
+            element.style.height = 'auto'; // Let content define height
+
+            setTimeout(() => {
+                window.html2canvas(element, {
+                    backgroundColor: '#ffffff', // Set background to white for the capture
+                    useCORS: true,
+                    scale: 2 
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `${fileName.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0,10)}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }).catch(err => {
+                    console.error("Image capture failed:", err);
+                    showToast('Failed to create image.', 'error');
+                }).finally(() => {
+                    // Clean up: remove the class and restore original height
+                    element.classList.remove('capturing-card');
+                    element.style.height = originalHeight;
+                });
+            }, 200); // Increased delay slightly for style to apply
+        };
+
         useEffect(() => {
-          let auditedData = data.filter(item => findValue(item, ['Status']) === 'Done');
+          // New logic for what is considered an audited call
+          let auditedData = data.filter(item => {
+              const status = findValue(item, ['Status', 'Audit Status']);
+              // A call is audited if Status is the boolean `true` or the string "True" (case-insensitive).
+              return status === true || String(status).trim().toLowerCase() === 'true';
+          });
           let filtered = auditedData;
 
           // Date Range Filter
@@ -983,19 +1059,48 @@
             const activeFilters = Object.values(filters).filter(val => val !== '').length;
             return activeFilters > 0 && filteredData.length > 0;
         }, [filters, filteredData]);
+        
+        // Final, more robust "failure-first" logic
+        const isPassStatus = (value) => {
+            // This function returns `true` for a PASS and `false` for a FAIL.
+            // We explicitly define all possible FAILURE conditions. If a value does not match a failure condition, it's a PASS.
+            
+            // A ticked checkbox is read as boolean `true`, which is a FAILURE.
+            if (value === true) {
+                return false;
+            }
 
+            // Normalize all other values to a string to check against text-based failure conditions.
+            const normalizedValue = String(value || '').trim().toLowerCase();
+            
+            // Define all strings that mean FAILURE.
+            const failConditions = ['fail', 'missing', 'true', '✓'];
+            
+            if (failConditions.includes(normalizedValue)) {
+                return false; // It's an explicit failure.
+            }
+
+            // If it's not an explicit failure, it's a PASS.
+            // This correctly handles: boolean `false`, null, undefined, empty string, "pass", "false".
+            return true;
+        };
 
         const totalAudits = filteredData.length;
-        const totalCE = filteredData.filter(item => findValue(item, ['CE']) === 'Fail').length;
-        const totalNCE = filteredData.filter(item => findValue(item, ['NCE']) === 'Fail').length;
-        const totalRTCPass = filteredData.filter(item => findValue(item, ['RTC']) === 'Pass').length;
+        
+        // A failure is when the status is NOT a pass.
+        const totalCE = filteredData.filter(item => !isPassStatus(findValue(item, ['CE']))).length;
+        const totalNCE = filteredData.filter(item => !isPassStatus(findValue(item, ['NCE']))).length;
+        
+        // RTC Accuracy is the percentage of calls that ARE a pass.
+        const totalRTCPass = filteredData.filter(item => isPassStatus(findValue(item, ['STS', 'RTC']))).length;
+        
         const cePercentage = totalAudits > 0 ? ((totalCE / totalAudits) * 100) : 0;
         const ncePercentage = totalAudits > 0 ? ((totalNCE / totalAudits) * 100) : 0;
         const rtcPercentage = totalAudits > 0 ? ((totalRTCPass / totalAudits) * 100) : 0;
         
         const ceTopics = useMemo(() => {
             const topics = filteredData
-                .filter(item => findValue(item, ['CE']) === 'Fail')
+                .filter(item => !isPassStatus(findValue(item, ['CE']))) // Updated logic
                 .map(item => findValue(item, ['CE Topic']))
                 .filter(topic => topic && topic !== 'N/A');
 
@@ -1010,8 +1115,8 @@
                 .map(([name, value]) => ({ name, value }));
         }, [filteredData]);
 
-        const ceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['CE']) === 'Fail').map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
-        const nceHolders = useMemo(() => Object.entries(filteredData.filter(item => findValue(item, ['NCE']) === 'Fail').map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
+        const ceHolders = useMemo(() => Object.entries(filteredData.filter(item => !isPassStatus(findValue(item, ['CE']))).map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
+        const nceHolders = useMemo(() => Object.entries(filteredData.filter(item => !isPassStatus(findValue(item, ['NCE']))).map(item => findValue(item, ['Evaluatee NT Login', 'Agent ID'])).reduce((acc, holder) => ({...acc, [holder]: (acc[holder] || 0) + 1 }), {})).sort(([,a],[,b]) => b-a).slice(0,5).map(([name, value]) => ({name, value})), [filteredData]);
         
         const requestSort = (key, config, setConfig) => {
             let direction = 'descending';
@@ -1027,16 +1132,20 @@
                 if (!auditorName) return acc;
                 if (!acc[auditorName]) acc[auditorName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTCPass: 0 };
                 acc[auditorName].totalAudits++;
-                if (findValue(item, ['CE']) === 'Fail') acc[auditorName].totalCE++;
-                if (findValue(item, ['NCE']) === 'Fail') acc[auditorName].totalNCE++;
-                if (findValue(item, ['RTC']) === 'Pass') acc[auditorName].totalRTCPass++;
+                if (!isPassStatus(findValue(item, ['CE']))) acc[auditorName].totalCE++;
+                if (!isPassStatus(findValue(item, ['NCE']))) acc[auditorName].totalNCE++;
+                if (isPassStatus(findValue(item, ['STS', 'RTC']))) {
+                    acc[auditorName].totalRTCPass++;
+                }
                 return acc;
             }, {});
 
             let sortableItems = Object.entries(auditorData).map(([auditor, metrics]) => ({
                 name: auditor,
                 totalAudits: metrics.totalAudits,
+                totalCE: metrics.totalCE,
                 cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
+                totalNCE: metrics.totalNCE,
                 ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
                 rtcAccuracy: (metrics.totalAudits > 0 ? (metrics.totalRTCPass / metrics.totalAudits) * 100 : 0),
             }));
@@ -1062,16 +1171,20 @@
                 if (!tlName) return acc;
                 if (!acc[tlName]) acc[tlName] = { totalAudits: 0, totalCE: 0, totalNCE: 0, totalRTCPass: 0 };
                 acc[tlName].totalAudits++;
-                if (findValue(item, ['CE']) === 'Fail') acc[tlName].totalCE++;
-                if (findValue(item, ['NCE']) === 'Fail') acc[tlName].totalNCE++;
-                if (findValue(item, ['RTC']) === 'Pass') acc[tlName].totalRTCPass++;
+                if (!isPassStatus(findValue(item, ['CE']))) acc[tlName].totalCE++;
+                if (!isPassStatus(findValue(item, ['NCE']))) acc[tlName].totalNCE++;
+                if (isPassStatus(findValue(item, ['STS', 'RTC']))) {
+                    acc[tlName].totalRTCPass++;
+                }
                 return acc;
             }, {});
 
             let sortableItems = Object.entries(tlData).map(([tl, metrics]) => ({
                 name: tl,
                 totalAudits: metrics.totalAudits,
+                totalCE: metrics.totalCE,
                 cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
+                totalNCE: metrics.totalNCE,
                 ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
                 rtcAccuracy: (metrics.totalAudits > 0 ? (metrics.totalRTCPass / metrics.totalAudits) * 100 : 0),
             }));
@@ -1090,6 +1203,41 @@
             
             return sortableItems;
         }, [filteredData, tlSortConfig]);
+
+        const skillMetrics = useMemo(() => {
+            const skillData = filteredData.reduce((acc, item) => {
+                const skillName = findValue(item, ['Skill']);
+                if (!skillName) return acc;
+                if (!acc[skillName]) acc[skillName] = { totalAudits: 0, totalCE: 0, totalNCE: 0 };
+                acc[skillName].totalAudits++;
+                if (!isPassStatus(findValue(item, ['CE']))) acc[skillName].totalCE++;
+                if (!isPassStatus(findValue(item, ['NCE']))) acc[skillName].totalNCE++;
+                return acc;
+            }, {});
+
+            let sortableItems = Object.entries(skillData).map(([skill, metrics]) => ({
+                name: skill,
+                totalAudits: metrics.totalAudits,
+                totalCE: metrics.totalCE,
+                cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
+                totalNCE: metrics.totalNCE,
+                ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
+            }));
+
+            if (skillSortConfig.key !== null) {
+                sortableItems.sort((a, b) => {
+                    if (a[skillSortConfig.key] < b[skillSortConfig.key]) {
+                        return skillSortConfig.direction === 'ascending' ? -1 : 1;
+                    }
+                    if (a[skillSortConfig.key] > b[skillSortConfig.key]) {
+                        return skillSortConfig.direction === 'ascending' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+            
+            return sortableItems;
+        }, [filteredData, skillSortConfig]);
 
         const getAccentColor = (metric, value) => {
             switch (metric) {
@@ -1295,30 +1443,39 @@
                     </CardContent>
                   </Card>
       
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card accentColor={getAccentColor('total-audits')}><CardHeader><CardTitle>Total Audits</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-indigo-400"><AnimatedNumber value={totalAudits} /></div></CardContent></Card>
                     <Card accentColor={getAccentColor('total-ce', cePercentage)}><CardHeader><CardTitle>Total CE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-red-400"><AnimatedNumber value={totalCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={cePercentage} isPercentage={true} /></p></CardContent></Card>
                     <Card accentColor={getAccentColor('total-nce', ncePercentage)}><CardHeader><CardTitle>Total NCE</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-orange-400"><AnimatedNumber value={totalNCE} /></div><p className="text-sm text-gray-400"><AnimatedNumber value={ncePercentage} isPercentage={true} /></p></CardContent></Card>
                     <Card accentColor={getAccentColor('rtc-accuracy', rtcPercentage)}><CardHeader><CardTitle>RTC Accuracy</CardTitle></CardHeader><CardContent><div className="text-4xl font-bold text-green-400"><AnimatedNumber value={rtcPercentage} isPercentage={true} /></div></CardContent></Card>
                   </div>
       
-                  {cardVisibility.evaluatorPerformance && <CollapsibleCard title="Evaluator Performance Breakdown" accentColor="#3b82f6">
-                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                  {cardVisibility.evaluatorPerformance && <CollapsibleCard 
+                      title="Evaluator Performance Breakdown" 
+                      accentColor="#3b82f6"
+                      cardRef={evaluatorCardRef}
+                      onDownload={() => handleDownloadImage(evaluatorCardRef, 'evaluator-performance')}
+                    >
+                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Evaluator</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
+                          <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
+                          <SortableHeader label="NCE Count" sortKey="totalNCE" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
-                          <SortableHeader label="RTC Accuracy %" sortKey="rtcAccuracy" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
+                          <SortableHeader label="RTC Acc %" sortKey="rtcAccuracy" sortConfig={auditorSortConfig} setSortConfig={setAuditorSortConfig} />
                       </div>
                       <div className="space-y-2 mt-2">
                           {auditorMetrics.map((auditor, index) => (
-                              <div key={auditor.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={auditor.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
                                       <span className="font-bold text-indigo-300 bg-indigo-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
                                       <span className="font-semibold text-gray-200 truncate">{auditor.name}</span>
                                   </div>
                                   <div className="text-center font-bold text-gray-300">{auditor.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{auditor.totalCE}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.cePercentage, 1)}`}>{auditor.cePercentage.toFixed(2)}%</div>
+                                  <div className="text-center font-bold text-gray-300">{auditor.totalNCE}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.ncePercentage, 10)}`}>{auditor.ncePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(auditor.rtcAccuracy, 90, true)}`}>{auditor.rtcAccuracy.toFixed(2)}%</div>
                               </div>
@@ -1326,38 +1483,93 @@
                       </div>
                   </CollapsibleCard>}
 
-                  {cardVisibility.tlPerformance && <CollapsibleCard title="TL Performance Breakdown" accentColor="#10b981">
-                      <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                  {cardVisibility.tlPerformance && <CollapsibleCard 
+                      title="TL Performance Breakdown" 
+                      accentColor="#10b981"
+                      cardRef={tlCardRef}
+                      onDownload={() => handleDownloadImage(tlCardRef, 'tl-performance')}
+                    >
+                      <div className="grid grid-cols-8 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
                           <div className="text-left font-semibold text-gray-300 col-span-2">Team Leader</div>
                           <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
+                          <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
+                          <SortableHeader label="NCE Count" sortKey="totalNCE" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                           <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
-                          <SortableHeader label="RTC Accuracy %" sortKey="rtcAccuracy" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
+                          <SortableHeader label="RTC Acc %" sortKey="rtcAccuracy" sortConfig={tlSortConfig} setSortConfig={setTlSortConfig} />
                       </div>
                       <div className="space-y-2 mt-2">
                           {tlMetrics.map((tl, index) => (
-                              <div key={tl.name} className="grid grid-cols-6 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                              <div key={tl.name} className="grid grid-cols-8 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
                                   <div className="col-span-2 flex items-center gap-3">
                                       <span className="font-bold text-green-300 bg-green-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
                                       <span className="font-semibold text-gray-200 truncate">{tl.name}</span>
                                   </div>
                                   <div className="text-center font-bold text-gray-300">{tl.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{tl.totalCE}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.cePercentage, 1)}`}>{tl.cePercentage.toFixed(2)}%</div>
+                                  <div className="text-center font-bold text-gray-300">{tl.totalNCE}</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.ncePercentage, 10)}`}>{tl.ncePercentage.toFixed(2)}%</div>
                                   <div className={`text-center font-bold ${getTableCellColor(tl.rtcAccuracy, 90, true)}`}>{tl.rtcAccuracy.toFixed(2)}%</div>
                               </div>
                           ))}
                       </div>
                   </CollapsibleCard>}
+                  
+                  {cardVisibility.skillPerformance && <CollapsibleCard 
+                      title="Skill Wise Performance" 
+                      accentColor="#a855f7"
+                      cardRef={skillCardRef}
+                      onDownload={() => handleDownloadImage(skillCardRef, 'skill-performance')}
+                    >
+                      <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center">
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Skill</div>
+                          <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
+                          <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
+                          <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
+                          <SortableHeader label="NCE Count" sortKey="totalNCE" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
+                          <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={skillSortConfig} setSortConfig={setSkillSortConfig} />
+                      </div>
+                      <div className="space-y-2 mt-2">
+                          {skillMetrics.map((skill, index) => (
+                              <div key={skill.name} className="grid grid-cols-7 gap-4 items-center p-3 rounded-lg hover:bg-white/5 hover:shadow-md transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                                  <div className="col-span-2 flex items-center gap-3">
+                                      <span className="font-bold text-purple-300 bg-purple-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                      <span className="font-semibold text-gray-200 truncate">{skill.name}</span>
+                                  </div>
+                                  <div className="text-center font-bold text-gray-300">{skill.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{skill.totalCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(skill.cePercentage, 1)}`}>{skill.cePercentage.toFixed(2)}%</div>
+                                  <div className="text-center font-bold text-gray-300">{skill.totalNCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(skill.ncePercentage, 10)}`}>{skill.ncePercentage.toFixed(2)}%</div>
+                              </div>
+                          ))}
+                      </div>
+                  </CollapsibleCard>}
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {cardVisibility.topCeHolders && <CollapsibleCard title="Top 5 CE Holders" accentColor="#ef4444">
+                    {cardVisibility.topCeHolders && <CollapsibleCard 
+                        title="Top 5 CE Holders" 
+                        accentColor="#ef4444"
+                        cardRef={ceHoldersCardRef}
+                        onDownload={() => handleDownloadImage(ceHoldersCardRef, 'top-ce-holders')}
+                      >
                         <div className="h-64"><BarChart data={ceHolders} barColor="linear-gradient(to right, #ef4444, #dc2626)" /></div>
                     </CollapsibleCard>}
-                    {cardVisibility.topNceHolders && <CollapsibleCard title="Top 5 NCE Holders" accentColor="#f97316">
+                    {cardVisibility.topNceHolders && <CollapsibleCard 
+                        title="Top 5 NCE Holders" 
+                        accentColor="#f97316"
+                        cardRef={nceHoldersCardRef}
+                        onDownload={() => handleDownloadImage(nceHoldersCardRef, 'top-nce-holders')}
+                      >
                         <div className="h-64"><BarChart data={nceHolders} barColor="linear-gradient(to right, #f97316, #fbbf24)" /></div>
                     </CollapsibleCard>}
-                    {cardVisibility.topCeTopics && <CollapsibleCard title="Top 5 CE Topics" accentColor="#ef4444" defaultMinimized={true}>
+                    {cardVisibility.topCeTopics && <CollapsibleCard 
+                        title="Top 5 CE Topics" 
+                        accentColor="#ef4444" 
+                        cardRef={ceTopicsCardRef}
+                        onDownload={() => handleDownloadImage(ceTopicsCardRef, 'top-ce-topics')}
+                      >
                         <div className="h-64"><BarChart data={ceTopics} barColor="linear-gradient(to right, #ef4444, #dc2626)" /></div>
                     </CollapsibleCard>}
                   </div>
@@ -1380,3 +1592,4 @@
     </script>
 </body>
 </html>
+
