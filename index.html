@@ -80,28 +80,27 @@
 
         /* --- THEME: Neumorphism --- */
         body.theme-neumorphism {
-            color: #374151;
+            color: #5a677a;
             background-color: #e0e5ec;
         }
         .theme-neumorphism .themed-card {
             background: #e0e5ec;
             box-shadow: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+            border-radius: 20px;
         }
         .theme-neumorphism .themed-input {
             background: #e0e5ec;
             border: 1px solid transparent;
-            color: #374151;
+            color: #5a677a;
             box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
         }
         .theme-neumorphism .themed-input:focus {
-            outline: 2px solid transparent;
-            outline-offset: 2px;
-            --tw-ring-offset-shadow: none;
+            outline: none;
             --tw-ring-shadow: none;
             box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff;
         }
         .theme-neumorphism .themed-button {
-            color: #374151;
+            color: #5a677a;
             background: #e0e5ec;
             box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
             font-weight: 600;
@@ -112,8 +111,8 @@
         .theme-neumorphism .themed-button:active {
             box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
         }
-        .theme-neumorphism h1, .theme-neumorphism h3, .theme-neumorphism .text-gray-100 { color: #374151 !important; }
-        .theme-neumorphism .text-gray-200, .theme-neumorphism .text-gray-300 { color: #525a66 !important; }
+        .theme-neumorphism h1, .theme-neumorphism h3, .theme-neumorphism .text-gray-100 { color: #434e5c !important; text-shadow: 1px 1px 1px #fff; }
+        .theme-neumorphism .text-gray-200, .theme-neumorphism .text-gray-300 { color: #5a677a !important; }
         .theme-neumorphism .text-gray-400 { color: #828a96 !important; }
         .theme-neumorphism ::-webkit-scrollbar-thumb { background: #a3b1c6; }
         .theme-neumorphism ::-webkit-scrollbar-thumb:hover { background: #8e9aae; }
@@ -176,21 +175,21 @@
         .theme-retro-futurism .themed-table-header { background-color: rgba(255,0,255,0.2); }
         .theme-retro-futurism .themed-table-row:hover { background-color: rgba(0, 242, 234, 0.1); }
         
-        /* --- THEME: Corporate Dark --- */
+        /* --- THEME: Corporate LIGHT --- */
         body.theme-corporate {
-            color: #e0e0e0;
-            background-color: #121212;
+            color: #2d3748;
+            background-color: #f4f7fa;
         }
         .theme-corporate .themed-card {
-            background: #1e1e1e;
-            border: 1px solid #333;
-            box-shadow: none;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             backdrop-filter: none;
         }
         .theme-corporate .themed-input {
-            background: #252525;
-            border: 1px solid #444;
-            color: #e0e0e0;
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
         }
         .theme-corporate .themed-input:focus {
             border-color: #007acc;
@@ -203,17 +202,16 @@
             box-shadow: none;
         }
         .theme-corporate .themed-button:hover {
-            background: #008ae6;
+            background: #005c99;
         }
-        .theme-corporate h1, .theme-corporate h3, .theme-corporate .text-gray-100 { color: #ffffff !important; }
-        .theme-corporate .text-gray-200, .theme-corporate .text-gray-300 { color: #b0b0b0 !important; }
-        .theme-corporate .text-gray-400 { color: #888888 !important; }
+        .theme-corporate h1, .theme-corporate h3, .theme-corporate .text-gray-100 { color: #1a202c !important; }
+        .theme-corporate .text-gray-200, .theme-corporate .text-gray-300 { color: #4a5568 !important; }
+        .theme-corporate .text-gray-400 { color: #718096 !important; }
         .theme-corporate ::-webkit-scrollbar-thumb { background: #007acc; }
         .theme-corporate ::-webkit-scrollbar-thumb:hover { background: #005c99; }
-        .theme-corporate input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-        .theme-corporate .themed-table-header { background-color: #2a2a2a; }
-        .theme-corporate .themed-table-row:hover { background-color: #2c2c2c; }
-
+        .theme-corporate input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+        .theme-corporate .themed-table-header { background-color: #edf2f7; }
+        .theme-corporate .themed-table-row:hover { background-color: #f7fafc; }
 
         body:not(.theme-dark) #background-container {
             display: none;
@@ -263,7 +261,7 @@
 
         /* Custom scrollbar for a polished look */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
         
         /* Style for card being captured */
         .capturing-card {
@@ -426,12 +424,12 @@
                     textClasses = 'text-gray-200';
                     break;
                 case 'corporate':
-                    previewClasses = 'bg-[#1e1e1e] border-blue-500';
-                    textClasses = 'text-gray-200';
+                    previewClasses = 'bg-[#f4f7fa] border-[#007acc]';
+                    textClasses = 'text-[#2d3748]';
                     break;
                 case 'neumorphism':
-                    previewClasses = 'bg-[#e0e5ec] border-gray-400 shadow-inner';
-                    textClasses = 'text-gray-700';
+                    previewClasses = 'bg-[#e0e5ec] border-[#a3b1c6] shadow-inner';
+                    textClasses = 'text-[#5a677a]';
                     break;
                 case 'retro-futurism':
                     previewClasses = 'bg-[#0d0221] border-pink-500';
@@ -442,7 +440,7 @@
             return (
                 <div 
                     onClick={() => onSelect(value)}
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 ${isSelected ? 'ring-4 ring-offset-2 ring-offset-gray-800 ring-indigo-500 border-transparent' : 'border-gray-700 hover:border-gray-500'}`}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 ${isSelected ? 'ring-4 ring-offset-2 ring-indigo-500 border-transparent' : 'border-gray-700 hover:border-gray-500'}`}
                 >
                     <div className={`h-16 w-full rounded-md ${previewClasses} mb-2`}></div>
                     <p className={`text-center font-semibold ${textClasses}`}>{name}</p>
@@ -873,6 +871,9 @@
         const [auditorSortConfig, setAuditorSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
         const [tlSortConfig, setTlSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
         const [skillSortConfig, setSkillSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
+        const [siteSortConfig, setSiteSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
+        const [tenureSortConfig, setTenureSortConfig] = useState({ key: 'totalAudits', direction: 'descending' });
+        const [topicSortConfig, setTopicSortConfig] = useState({ key: 'totalCE', direction: 'descending' });
         
         const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'detail', 'settings'
         const [detailData, setDetailData] = useState(null);
@@ -884,6 +885,9 @@
         const evaluatorCardRef = useRef(null);
         const tlCardRef = useRef(null);
         const skillCardRef = useRef(null);
+        const siteCardRef = useRef(null);
+        const tenureCardRef = useRef(null);
+        const topicCardRef = useRef(null);
         const ceHoldersCardRef = useRef(null);
         const nceHoldersCardRef = useRef(null);
         const ceTopicsCardRef = useRef(null);
@@ -930,9 +934,11 @@
                 evaluatorPerformance: true,
                 tlPerformance: true,
                 skillPerformance: true,
+                sitePerformance: true,
+                tenurePerformance: true,
+                topicPerformance: true,
                 topCeHolders: true,
                 topNceHolders: true,
-                topCeTopics: true,
             };
             const loadedVisibility = savedVisibility ? JSON.parse(savedVisibility) : {};
             return { ...defaultVisibility, ...loadedVisibility };
@@ -1043,7 +1049,7 @@
                     agentId: ['Evaluatee NT Login', 'Agent ID'],
                     tlName: ['Team Leader', 'TL'],
                     site: ['Site'],
-                    tenure: ['Tenure 2'],
+                    tenure: ['AON', 'Tenure 2'],
                     skill: ['Skill']
                 };
 
@@ -1245,7 +1251,7 @@
               return site && site.toLowerCase().includes(filters.site.toLowerCase());
           });
           if (filters.tenure) filtered = filtered.filter(item => {
-              const tenure = findValue(item, ['Tenure 2']);
+              const tenure = findValue(item, ['AON', 'Tenure 2']);
               return tenure && tenure.toLowerCase().includes(filters.tenure.toLowerCase());
           });
           if (filters.skill) filtered = filtered.filter(item => {
@@ -1454,6 +1460,108 @@
             
             return sortableItems;
         }, [filteredData, skillSortConfig]);
+        
+        const siteMetrics = useMemo(() => {
+            const siteData = filteredData.reduce((acc, item) => {
+                const siteName = findValue(item, ['Site']);
+                if (!siteName) return acc;
+                if (!acc[siteName]) acc[siteName] = { totalAudits: 0, totalCE: 0, totalNCE: 0 };
+                acc[siteName].totalAudits++;
+                if (!isPassStatus(findValue(item, ['CE']))) acc[siteName].totalCE++;
+                if (!isPassStatus(findValue(item, ['NCE']))) acc[siteName].totalNCE++;
+                return acc;
+            }, {});
+
+            let sortableItems = Object.entries(siteData).map(([site, metrics]) => ({
+                name: site,
+                totalAudits: metrics.totalAudits,
+                totalCE: metrics.totalCE,
+                cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
+                totalNCE: metrics.totalNCE,
+                ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
+            }));
+
+            if (siteSortConfig.key !== null) {
+                sortableItems.sort((a, b) => {
+                    if (a[siteSortConfig.key] < b[siteSortConfig.key]) {
+                        return siteSortConfig.direction === 'ascending' ? -1 : 1;
+                    }
+                    if (a[siteSortConfig.key] > b[siteSortConfig.key]) {
+                        return siteSortConfig.direction === 'ascending' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+            
+            return sortableItems;
+        }, [filteredData, siteSortConfig]);
+        
+        const tenureMetrics = useMemo(() => {
+            const tenureData = filteredData.reduce((acc, item) => {
+                const tenureName = findValue(item, ['AON', 'Tenure 2']);
+                if (!tenureName) return acc;
+                if (!acc[tenureName]) acc[tenureName] = { totalAudits: 0, totalCE: 0, totalNCE: 0 };
+                acc[tenureName].totalAudits++;
+                if (!isPassStatus(findValue(item, ['CE']))) acc[tenureName].totalCE++;
+                if (!isPassStatus(findValue(item, ['NCE']))) acc[tenureName].totalNCE++;
+                return acc;
+            }, {});
+
+            let sortableItems = Object.entries(tenureData).map(([tenure, metrics]) => ({
+                name: tenure,
+                totalAudits: metrics.totalAudits,
+                totalCE: metrics.totalCE,
+                cePercentage: (metrics.totalAudits > 0 ? (metrics.totalCE / metrics.totalAudits) * 100 : 0),
+                totalNCE: metrics.totalNCE,
+                ncePercentage: (metrics.totalAudits > 0 ? (metrics.totalNCE / metrics.totalAudits) * 100 : 0),
+            }));
+
+            if (tenureSortConfig.key !== null) {
+                sortableItems.sort((a, b) => {
+                    if (a[tenureSortConfig.key] < b[tenureSortConfig.key]) {
+                        return tenureSortConfig.direction === 'ascending' ? -1 : 1;
+                    }
+                    if (a[tenureSortConfig.key] > b[tenureSortConfig.key]) {
+                        return tenureSortConfig.direction === 'ascending' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+            
+            return sortableItems;
+        }, [filteredData, tenureSortConfig]);
+
+        const topicMetrics = useMemo(() => {
+            const topicData = filteredData
+                .filter(item => !isPassStatus(findValue(item, ['CE'])))
+                .reduce((acc, item) => {
+                const topicName = findValue(item, ['CE Topic']);
+                if (!topicName || topicName === 'N/A') return acc;
+                if (!acc[topicName]) acc[topicName] = { totalCE: 0 };
+                acc[topicName].totalCE++;
+                return acc;
+            }, {});
+
+            let sortableItems = Object.entries(topicData).map(([topic, metrics]) => ({
+                name: topic,
+                totalCE: metrics.totalCE,
+            }));
+
+            if (topicSortConfig.key !== null) {
+                sortableItems.sort((a, b) => {
+                    if (a[topicSortConfig.key] < b[topicSortConfig.key]) {
+                        return topicSortConfig.direction === 'ascending' ? -1 : 1;
+                    }
+                    if (a[topicSortConfig.key] > b[topicSortConfig.key]) {
+                        return topicSortConfig.direction === 'ascending' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+            
+            return sortableItems;
+        }, [filteredData, topicSortConfig]);
+
 
         const getAccentColor = (metric, value) => {
             switch (metric) {
@@ -1764,6 +1872,68 @@
                           ))}
                       </div>
                   </CollapsibleCard>}
+                  
+                  {cardVisibility.sitePerformance && <CollapsibleCard 
+                      title="Site Wise Performance" 
+                      accentColor="#22d3ee"
+                      cardRef={siteCardRef}
+                      onDownload={() => handleDownloadImage(siteCardRef, 'site-performance')}
+                    >
+                      <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Site</div>
+                          <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={siteSortConfig} setSortConfig={setSiteSortConfig} />
+                          <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={siteSortConfig} setSortConfig={setSiteSortConfig} />
+                          <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={siteSortConfig} setSortConfig={setSiteSortConfig} />
+                          <SortableHeader label="NCE Count" sortKey="totalNCE" sortConfig={siteSortConfig} setSortConfig={setSiteSortConfig} />
+                          <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={siteSortConfig} setSortConfig={setSiteSortConfig} />
+                      </div>
+                      <div className="space-y-2 mt-2">
+                          {siteMetrics.map((site, index) => (
+                              <div key={site.name} className="grid grid-cols-7 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                                  <div className="col-span-2 flex items-center gap-3">
+                                      <span className="font-bold text-cyan-300 bg-cyan-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                      <span className="font-semibold text-gray-200 truncate">{site.name}</span>
+                                  </div>
+                                  <div className="text-center font-bold text-gray-300">{site.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{site.totalCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(site.cePercentage, 1)}`}>{site.cePercentage.toFixed(2)}%</div>
+                                  <div className="text-center font-bold text-gray-300">{site.totalNCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(site.ncePercentage, 10)}`}>{site.ncePercentage.toFixed(2)}%</div>
+                              </div>
+                          ))}
+                      </div>
+                  </CollapsibleCard>}
+
+                   {cardVisibility.tenurePerformance && <CollapsibleCard 
+                      title="Tenure Wise Performance" 
+                      accentColor="#facc15"
+                      cardRef={tenureCardRef}
+                      onDownload={() => handleDownloadImage(tenureCardRef, 'tenure-performance')}
+                    >
+                      <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
+                          <div className="text-left font-semibold text-gray-300 col-span-2">Tenure</div>
+                          <SortableHeader label="Total Audits" sortKey="totalAudits" sortConfig={tenureSortConfig} setSortConfig={setTenureSortConfig} />
+                          <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={tenureSortConfig} setSortConfig={setTenureSortConfig} />
+                          <SortableHeader label="CE %" sortKey="cePercentage" sortConfig={tenureSortConfig} setSortConfig={setTenureSortConfig} />
+                          <SortableHeader label="NCE Count" sortKey="totalNCE" sortConfig={tenureSortConfig} setSortConfig={setTenureSortConfig} />
+                          <SortableHeader label="NCE %" sortKey="ncePercentage" sortConfig={tenureSortConfig} setSortConfig={setTenureSortConfig} />
+                      </div>
+                      <div className="space-y-2 mt-2">
+                          {tenureMetrics.map((tenure, index) => (
+                              <div key={tenure.name} className="grid grid-cols-7 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                                  <div className="col-span-2 flex items-center gap-3">
+                                      <span className="font-bold text-yellow-300 bg-yellow-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                      <span className="font-semibold text-gray-200 truncate">{tenure.name}</span>
+                                  </div>
+                                  <div className="text-center font-bold text-gray-300">{tenure.totalAudits}</div>
+                                  <div className="text-center font-bold text-gray-300">{tenure.totalCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(tenure.cePercentage, 1)}`}>{tenure.cePercentage.toFixed(2)}%</div>
+                                  <div className="text-center font-bold text-gray-300">{tenure.totalNCE}</div>
+                                  <div className={`text-center font-bold ${getTableCellColor(tenure.ncePercentage, 10)}`}>{tenure.ncePercentage.toFixed(2)}%</div>
+                              </div>
+                          ))}
+                      </div>
+                  </CollapsibleCard>}
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {cardVisibility.topCeHolders && <CollapsibleCard 
@@ -1782,14 +1952,28 @@
                       >
                         <div className="h-64"><BarChart data={nceHolders} barColor="linear-gradient(to right, #f97316, #fbbf24)" /></div>
                     </CollapsibleCard>}
-                    {cardVisibility.topCeTopics && <CollapsibleCard 
-                        title="Top 5 CE Topics" 
-                        accentColor="#ef4444" 
-                        cardRef={ceTopicsCardRef}
-                        onDownload={() => handleDownloadImage(ceTopicsCardRef, 'top-ce-topics')}
+                    {cardVisibility.topicPerformance && <CollapsibleCard 
+                        title="Topic Wise CE Score" 
+                        accentColor="#ec4899"
+                        cardRef={topicCardRef}
+                        onDownload={() => handleDownloadImage(topicCardRef, 'topic-performance')}
                       >
-                        <div className="h-64"><BarChart data={ceTopics} barColor="linear-gradient(to right, #ef4444, #dc2626)" /></div>
-                    </CollapsibleCard>}
+                        <div className="grid grid-cols-3 gap-4 px-4 py-2 border-b-2 border-gray-700 text-sm text-center themed-table-header">
+                            <div className="text-left font-semibold text-gray-300 col-span-2">Topic</div>
+                            <SortableHeader label="CE Count" sortKey="totalCE" sortConfig={topicSortConfig} setSortConfig={setTopicSortConfig} />
+                        </div>
+                        <div className="space-y-2 mt-2">
+                            {topicMetrics.map((topic, index) => (
+                                <div key={topic.name} className="grid grid-cols-3 gap-4 items-center p-3 rounded-lg themed-table-row transition-all duration-200 fade-in-up" style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}>
+                                    <div className="col-span-2 flex items-center gap-3">
+                                        <span className="font-bold text-pink-300 bg-pink-900/50 rounded-full w-8 h-8 flex items-center justify-center">{index + 1}</span>
+                                        <span className="font-semibold text-gray-200 truncate">{topic.name}</span>
+                                    </div>
+                                    <div className="text-center font-bold text-gray-300">{topic.totalCE}</div>
+                                </div>
+                            ))}
+                        </div>
+                      </CollapsibleCard>}
                   </div>
                 </main>
               )}
