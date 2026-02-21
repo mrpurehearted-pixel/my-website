@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Namaz & Ramadan Planner</title>
+    <title>Taqwa - Prayer, Quran & Hadith</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
@@ -1138,11 +1138,16 @@
             
             try {
                 if (!hadithData[book]) {
-                    // Fetch full lightweight datasets from reliable API
+                    // Fetch full lightweight datasets from reliable API (Fixed GitHub jsDelivr links)
                     const [arRes, bnRes] = await Promise.all([
-                        fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/hadith-api@1/editions/ara-${book}.min.json`),
-                        fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/hadith-api@1/editions/ben-${book}.min.json`)
+                        fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-${book}.min.json`),
+                        fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ben-${book}.min.json`)
                     ]);
+                    
+                    if (!arRes.ok || !bnRes.ok) {
+                        throw new Error("Failed to load Hadith data");
+                    }
+                    
                     hadithData[book] = {
                         ar: await arRes.json(),
                         bn: await bnRes.json()
@@ -1151,8 +1156,12 @@
                 activeHadithBook = book;
                 renderHadithChapters();
             } catch (e) {
-                document.getElementById('hadith-loader').innerHTML = `<p class="text-red-400">ইন্টারনেট সংযোগ চেক করুন!</p>`;
-                setTimeout(() => backToHadithBooks(), 2000);
+                console.error("Hadith API Error:", e);
+                document.getElementById('hadith-loader').innerHTML = `<div class="text-center"><i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4"></i><p class="text-red-400">হাদিস লোড করতে সমস্যা হচ্ছে। ইন্টারনেট সংযোগ চেক করুন!</p></div>`;
+                setTimeout(() => {
+                    document.getElementById('hadith-loader').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4"></i><p class="text-lg" data-lang="downloading_book">হাদিসের খণ্ডগুলো লোড হচ্ছে... দয়া করে অপেক্ষা করুন।</p>`;
+                    backToHadithBooks();
+                }, 3000);
             }
         };
 
@@ -1167,8 +1176,8 @@
             const cont = document.getElementById('chapters-container');
             let html = '';
             
-            // Limit to first 20 important chapters to keep UI clean
-            const sectionKeys = Object.keys(metadata.sections).filter(k => k !== "0").slice(0, 20);
+            // Limit to important chapters and filter out empty ones to keep UI clean
+            const sectionKeys = Object.keys(metadata.sections).filter(k => k !== "0" && metadata.sections[k].trim() !== "").slice(0, 30);
             
             sectionKeys.forEach(key => {
                 const name = metadata.sections[key];
