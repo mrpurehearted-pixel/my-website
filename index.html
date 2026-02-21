@@ -30,8 +30,8 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .prayer-row { transition: all 0.3s ease; }
-        
+        .prayer-row { transition: all 0.3s ease; cursor: pointer; }
+        .prayer-row:hover { background: rgba(30, 41, 59, 0.8); }
         .prayer-row.active {
             background: #113324;
             border-left: 4px solid #10b981;
@@ -49,7 +49,6 @@
 
         .check-btn { transition: all 0.2s; }
         .check-btn.checked { background: #10b981; color: white; border-color: #10b981; }
-        .rakat-card { border-top: 4px solid #10b981; }
         
         .lang-btn { padding: 10px 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; cursor: pointer; }
         .lang-btn.active { background: #10b981; color: white; border-color: #10b981; }
@@ -66,7 +65,7 @@
 
         .arabic-text { font-family: 'Amiri', serif; }
         
-        .ayah-card { 
+        .ayah-card, .hadith-card { 
             background: rgba(30, 41, 59, 0.4);
             border: 1px solid rgba(255,255,255,0.03); 
             position: relative; 
@@ -90,6 +89,14 @@
             box-shadow: 0 -2px 10px rgba(16, 185, 129, 0.5);
             z-index: 20;
         }
+
+        .dua-block {
+            background: rgba(15, 23, 42, 0.4);
+            border-left: 4px solid #10b981;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -107,11 +114,103 @@
             </div>
         </header>
 
-        <div id="page-namaz" class="page active">
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page active">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Namaz Countdown -->
+                <div class="glass rounded-3xl p-8 relative overflow-hidden group h-full">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all" id="dash-glow-circle"></div>
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="text-emerald-400 font-bold uppercase tracking-widest text-xs" id="dash-lbl-curr-prayer">বর্তমান নামাজ</span>
+                            <h2 class="text-6xl font-black mt-2 glow-green text-white" id="dash-current-prayer-name">...</h2>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-400 text-xs font-medium uppercase tracking-widest">
+                                <span data-lang="next_prayer">পরবর্তী</span>: <span id="dash-next-prayer-name" class="text-gray-200">...</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-8">
+                        <div class="text-gray-400 text-sm mb-2" id="dash-lbl-remaining">বাকি সময়</div>
+                        <div class="text-7xl font-mono font-bold tracking-tighter" id="dash-countdown">00:00:00</div>
+                    </div>
+                    <div class="w-full bg-gray-800/50 h-2 rounded-full overflow-hidden">
+                        <div id="dash-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Sawom Countdown -->
+                <div class="glass rounded-3xl p-8 relative overflow-hidden group h-full flex flex-col justify-between">
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-orange-400 font-bold uppercase tracking-widest text-xs" id="dash-sawom-status-label">সাহরির জন্য অপেক্ষা</span>
+                                <div class="text-6xl font-black mt-2" id="dash-sawom-countdown">00:00:00</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-800/50 h-2 rounded-full overflow-hidden mb-8">
+                            <div id="dash-sawom-progress" class="h-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="flex-1 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
+                            <div class="text-[10px] text-emerald-400 uppercase tracking-tighter mb-1" data-lang="sehri_ends">সাহরি শেষ</div>
+                            <div class="text-lg md:text-xl font-bold" id="dash-sehri-time-val">--:--</div>
+                        </div>
+                        <div class="flex-1 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 text-center">
+                            <div class="text-[10px] text-orange-400 uppercase tracking-tighter mb-1" data-lang="iftar_starts">ইফতার শুরু</div>
+                            <div class="text-lg md:text-xl font-bold" id="dash-iftar-time-val">--:--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Hadith Widget -->
+            <div class="glass rounded-3xl p-6 md:p-8 mt-6 relative overflow-hidden border-l-4 border-emerald-500">
+                <div class="flex items-center gap-3 mb-4 relative z-10">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <i class="fa-solid fa-book-open-reader text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-400" data-lang="daily_hadith_title">আজকের হাদিস</h3>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest" data-lang="daily_hadith_sub">রমজানের প্রতিদিনের অনুপ্রেরণা</p>
+                    </div>
+                </div>
+                <div id="dash-daily-hadith" class="space-y-4 relative z-10">
+                    <!-- Loaded dynamically -->
+                </div>
+                <i class="fa-solid fa-quote-right absolute -bottom-4 -right-2 text-8xl text-white/5 z-0"></i>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mt-6">
+                <div class="glass rounded-2xl p-5 text-center flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-moon text-indigo-400 text-2xl mb-3"></i>
+                    <div class="text-xs text-gray-400 uppercase tracking-wider" data-lang="hijri">হিজরি</div>
+                    <div class="font-bold text-sm mt-1" id="dash-hijri-date">-- --</div>
+                </div>
+                <div class="glass rounded-2xl p-5 text-center flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-earth-asia text-emerald-400 text-2xl mb-3"></i>
+                    <div class="text-xs text-gray-400 uppercase tracking-wider" data-lang="region">অঞ্চল</div>
+                    <div class="font-bold text-sm mt-1" id="val-region" data-lang="region_val">ঢাকা ও পার্শ্ববর্তী</div>
+                </div>
+                <div class="glass rounded-2xl p-5 text-center flex flex-col items-center justify-center col-span-2 sm:col-span-1">
+                    <i class="fa-solid fa-clock text-orange-400 text-2xl mb-3"></i>
+                    <div class="text-xs text-gray-400 uppercase tracking-wider" data-lang="sunrise">সূর্যোদয়</div>
+                    <div class="font-bold text-sm mt-1" id="dash-sunrise-time">--:--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAMAZ SCHEDULE PAGE -->
+        <div id="page-namaz" class="page">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Namaz Main Countdown -->
                 <div class="lg:col-span-7 flex flex-col gap-6">
                     <div class="glass rounded-3xl p-8 relative overflow-hidden group">
-                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all" id="namaz-glow-circle"></div>
                         <div class="flex justify-between items-start mb-6">
                             <div>
                                 <span class="text-emerald-400 font-bold uppercase tracking-widest text-xs" id="lbl-curr-prayer">বর্তমান নামাজ</span>
@@ -119,7 +218,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="text-gray-400 text-xs font-medium uppercase tracking-widest">
-                                    <span id="lbl-next-prayer">পরবর্তী</span>: <span id="next-prayer-name" class="text-gray-200">...</span>
+                                    <span data-lang="next_prayer">পরবর্তী</span>: <span id="next-prayer-name" class="text-gray-200">...</span>
                                 </span>
                             </div>
                         </div>
@@ -131,40 +230,29 @@
                             <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <div class="glass rounded-2xl p-4 text-center">
-                            <i class="fa-solid fa-moon text-indigo-400 mb-2"></i>
-                            <div class="text-xs text-gray-400 uppercase" id="lbl-hijri">হিজরি</div>
-                            <div class="font-bold text-sm" id="hijri-date">-- --</div>
-                        </div>
-                        <div class="glass rounded-2xl p-4 text-center">
-                            <i class="fa-solid fa-earth-asia text-emerald-400 mb-2"></i>
-                            <div class="text-xs text-gray-400 uppercase" id="lbl-region">অঞ্চল</div>
-                            <div class="font-bold text-sm" id="val-region">ঢাকা ও পার্শ্ববর্তী</div>
-                        </div>
-                        <div class="glass rounded-2xl p-4 text-center col-span-2 sm:col-span-1">
-                            <i class="fa-solid fa-clock text-orange-400 mb-2"></i>
-                            <div class="text-xs text-gray-400 uppercase" id="lbl-sunrise">সূর্যোদয়</div>
-                            <div class="font-bold text-sm" id="sunrise-time">--:--</div>
-                        </div>
-                    </div>
                 </div>
+
+                <!-- Schedule List -->
                 <div class="lg:col-span-5">
                     <div class="glass rounded-3xl p-6 h-full">
-                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-                            <i class="fa-solid fa-list-check text-emerald-500"></i>
-                            <span id="lbl-daily-schedule">আজকের সময়সূচী</span>
-                        </h3>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-emerald-500"></i>
+                                <span data-lang="daily_schedule">আজকের সময়সূচী</span>
+                            </h3>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/20" data-lang="click_for_details">বিস্তারিত জানতে ক্লিক করুন</span>
+                        </div>
                         <div class="space-y-3" id="salah-table"></div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- QURAN PAGE -->
         <div id="page-quran" class="page">
             <div id="surah-list-view" class="space-y-6">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h3 class="text-2xl font-bold text-gradient" id="lbl-quran-title">আল কুরআন</h3>
+                    <h3 class="text-2xl font-bold text-gradient" data-lang="quran_title">আল কুরআন</h3>
                     <div class="glass px-4 py-2 rounded-xl flex items-center gap-3 w-full md:w-64">
                         <i class="fa-solid fa-magnifying-glass text-gray-500 text-sm"></i>
                         <input type="text" id="surah-search" placeholder="সূরা খুঁজুন..." class="bg-transparent border-none outline-none text-sm w-full" onkeyup="filterSurahs()">
@@ -179,16 +267,16 @@
             </div>
             <div id="ayah-reading-view" class="hidden space-y-6 pb-24">
                 <button onclick="backToSurahList()" class="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors">
-                    <i class="fa-solid fa-arrow-left"></i> <span id="lbl-back">তালিকায় ফিরুন</span>
+                    <i class="fa-solid fa-arrow-left"></i> <span data-lang="back">তালিকায় ফিরুন</span>
                 </button>
                 
                 <div class="glass rounded-3xl p-6 md:p-8 relative">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-gray-700/50 pb-6 gap-6">
                         <div>
-                            <h2 class="text-3xl font-bold text-white" id="active-surah-name" data-lang="surah_name">Surah Name</h2>
-                            <p class="text-gray-400 text-sm mt-1" id="active-surah-info" data-lang="loading">Loading...</p>
+                            <h2 class="text-3xl font-bold text-white" id="active-surah-name">Surah Name</h2>
+                            <p class="text-gray-400 text-sm mt-1" id="active-surah-info">Loading...</p>
                         </div>
-                        <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                        <div class="flex items-center justify-end w-full md:w-auto">
                             <button id="btn-main-play" onclick="toggleFullSurahPlay()" class="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] shrink-0">
                                 <i id="icon-main-play" class="fa-solid fa-play text-white text-xl ml-1"></i>
                             </button>
@@ -200,7 +288,77 @@
                 </div>
             </div>
         </div>
+        
+        <!-- HADITH EXPLORER PAGE -->
+        <div id="page-hadith" class="page">
+            <div id="hadith-book-list" class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+                    <h3 class="text-2xl font-bold text-gradient flex items-center gap-3" data-lang="hadith_title">
+                        <i class="fa-solid fa-book-open-reader"></i> আল হাদিস (সহিহ)
+                    </h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div onclick="openHadithBook('bukhari')" class="glass rounded-3xl p-8 border-t-4 border-emerald-500 cursor-pointer hover:bg-slate-800/60 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-book-journal-whills text-emerald-400 text-2xl"></i>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-emerald-400 transition-colors"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-white mb-2" data-lang="sahih_bukhari">সহীহ বুখারী</h2>
+                        <p class="text-sm text-slate-400">ইসলামের সর্বাধিক বিশুদ্ধ ও নির্ভরযোগ্য হাদিস গ্রন্থ।</p>
+                    </div>
+                    
+                    <div onclick="openHadithBook('muslim')" class="glass rounded-3xl p-8 border-t-4 border-blue-500 cursor-pointer hover:bg-slate-800/60 transition-all group">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-book-journal-whills text-blue-400 text-2xl"></i>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-blue-400 transition-colors"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-white mb-2" data-lang="sahih_muslim">সহীহ মুসলিম</h2>
+                        <p class="text-sm text-slate-400">বুখারীর পর দ্বিতীয় সর্বাধিক বিশুদ্ধ হাদিস গ্রন্থ।</p>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Hadith Loader -->
+            <div id="hadith-loader" class="hidden flex-col items-center justify-center py-20 opacity-50">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4"></i>
+                <p class="text-lg" data-lang="downloading_book">হাদিসের খণ্ডগুলো লোড হচ্ছে... দয়া করে অপেক্ষা করুন।</p>
+            </div>
+
+            <!-- Hadith Chapter List -->
+            <div id="hadith-chapter-list" class="hidden space-y-6">
+                <button onclick="backToHadithBooks()" class="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> <span data-lang="back_to_books">বইয়ের তালিকায় ফিরুন</span>
+                </button>
+                <div class="glass rounded-3xl p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4" id="active-book-title">Book Name</h2>
+                    <div class="grid grid-cols-1 gap-3" id="chapters-container">
+                        <!-- Chapters populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hadith Reading View -->
+            <div id="hadith-reading-view" class="hidden space-y-6 pb-20">
+                <button onclick="backToHadithChapters()" class="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> <span data-lang="back_to_chapters">অধ্যায়ে ফিরুন</span>
+                </button>
+                <div class="glass rounded-3xl p-6 md:p-8">
+                    <div class="mb-8 border-b border-white/10 pb-6">
+                        <h2 class="text-2xl md:text-3xl font-bold text-white" id="active-chapter-title">Chapter Name</h2>
+                    </div>
+                    <div id="reading-hadiths-container" class="space-y-6">
+                        <!-- Hadiths populated via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAWOM PAGE -->
         <div id="page-sawom" class="page">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div class="lg:col-span-8 flex flex-col gap-6">
@@ -231,26 +389,43 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="glass rounded-3xl p-6 border-l-4 border-emerald-500">
-                            <h4 class="text-emerald-400 font-bold text-sm mb-4 uppercase tracking-wider" id="lbl-sehri-dua">সাহরির দোয়া</h4>
+                            <h4 class="text-emerald-400 font-bold text-sm mb-4 uppercase tracking-wider" data-lang="roza_niyyat">রোজার নিয়ত</h4>
                             <p class="text-2xl text-right arabic-text mb-4" dir="rtl">نَوَيْتُ أَنْ أَصُومَ غَدًا مِنْ شَهْرِ رَمَضَانَ الْمُبَارَكِ فَرْضًا لَكَ يَا اللهُ فَتَقَبَّلْ مِنِّي إِنَّكَ أَنْتَ السَّمِيْعُ الْعَلِيْمُ</p>
-                            <div class="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
-                                <span class="text-xs font-bold text-emerald-400 block mb-1">উচ্চারণ:</span>
-                                <p class="text-sm text-gray-300 leading-relaxed">নাওয়াইতু আন আসুমা গাদাম মিন শাহরি রমাদ্বানাল মুবারাকি ফারদ্বাল্লাকা ইয়া আল্লাহু ফাতাকাব্বাল মিন্নি ইন্নাকা আংতাস সামিউল আলিম।</p>
+                            <div class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl space-y-3">
+                                <div>
+                                    <span class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider block mb-1" data-lang="pronun_title">উচ্চারণ:</span>
+                                    <p class="text-sm text-gray-300 leading-relaxed" data-lang="sehri_dua_pronun">নাওয়াইতু আন আসুমা গাদাম মিন শাহরি রমাদ্বানাল মুবারাকি ফারদ্বাল্লাকা ইয়া আল্লাহু ফাতাকাব্বাল মিন্নি ইন্নাকা আংতাস সামিউল আলিম।</p>
+                                </div>
+                                <div class="border-t border-emerald-500/10 pt-3">
+                                    <span class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider block mb-1" data-lang="meaning_title">অর্থ:</span>
+                                    <p class="text-sm text-gray-200 leading-relaxed" data-lang="sehri_dua_meaning">হে আল্লাহ! আমি আগামীকাল পবিত্র রমজানের ফরজ রোজা রাখার নিয়ত করছি। সুতরাং তুমি আমার পক্ষ থেকে তা কবুল করো, নিশ্চয়ই তুমি সর্বশ্রোতা ও সর্বজ্ঞানী।</p>
+                                </div>
                             </div>
                         </div>
                         <div class="glass rounded-3xl p-6 border-l-4 border-orange-500">
-                            <h4 class="text-orange-400 font-bold text-sm mb-4 uppercase tracking-wider" id="lbl-iftar-dua">ইফতারের দোয়া</h4>
+                            <h4 class="text-orange-400 font-bold text-sm mb-4 uppercase tracking-wider" data-lang="iftar_dua">ইফতারের দোয়া</h4>
                             <p class="text-2xl text-right arabic-text mb-4" dir="rtl">اَللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ اَفْطَرْتُ</p>
-                            <div class="bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl">
-                                <span class="text-xs font-bold text-orange-400 block mb-1">উচ্চারণ:</span>
-                                <p class="text-sm text-gray-300 leading-relaxed">আল্লাহুম্মা লাকা সুমতু ওয়া আলা রিযক্বিকা আফতারতু।</p>
+                            <div class="bg-orange-500/5 border border-orange-500/10 p-4 rounded-xl space-y-3">
+                                <div>
+                                    <span class="text-[10px] font-bold text-orange-500/80 uppercase tracking-wider block mb-1" data-lang="pronun_title">উচ্চারণ:</span>
+                                    <p class="text-sm text-gray-300 leading-relaxed" data-lang="iftar_dua_pronun">আল্লাহুম্মা লাকা সুমতু ওয়া আলা রিযক্বিকা আফতারতু।</p>
+                                </div>
+                                <div class="border-t border-orange-500/10 pt-3">
+                                    <span class="text-[10px] font-bold text-orange-500/80 uppercase tracking-wider block mb-1" data-lang="meaning_title">অর্থ:</span>
+                                    <p class="text-sm text-gray-200 leading-relaxed" data-lang="iftar_dua_meaning">হে আল্লাহ! আমি তোমারই সন্তুষ্টির জন্য রোজা রেখেছি এবং তোমারই দেয়া রিযিক দিয়ে ইফতার করছি।</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="lg:col-span-4">
                     <div class="glass rounded-3xl p-6 h-full flex flex-col relative">
-                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2" id="lbl-sawom-cal">রমাদান ক্যালেন্ডার</h3>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-2" data-lang="sawom_cal">রমাদান ক্যালেন্ডার</h3>
+                            <button onclick="openFullRamadanCalendar()" class="text-[10px] md:text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-lg hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-expand"></i> <span data-lang="full_cal_btn">সম্পূর্ণ দেখুন</span>
+                            </button>
+                        </div>
                         <div id="fasting-calendar" class="space-y-3 flex-1 overflow-y-auto max-h-[400px]"></div>
                     </div>
                 </div>
@@ -259,11 +434,11 @@
 
         <div id="page-planner" class="page">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h3 class="text-2xl font-bold text-gradient text-center md:text-left" id="lbl-planner-title">তাকওয়া অর্জনে রমাদান প্ল্যানার</h3>
+                <h3 class="text-2xl font-bold text-gradient text-center md:text-left" data-lang="planner_title">তাকওয়া অর্জনে রমাদান প্ল্যানার</h3>
                 <div class="flex items-center gap-3 glass p-2 rounded-2xl">
                     <button onclick="changePlannerDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-xl hover:bg-emerald-500/20"><i class="fa-solid fa-chevron-left"></i></button>
                     <div class="text-center min-w-[120px]">
-                        <div class="text-[10px] text-emerald-400 uppercase font-bold" id="lbl-ramadan-day">Ramadan Day</div>
+                        <div class="text-[10px] text-emerald-400 uppercase font-bold" data-lang="ramadan_day">Ramadan Day</div>
                         <div class="text-xl font-bold" id="planner-day-display">01</div>
                     </div>
                     <button onclick="changePlannerDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-xl hover:bg-emerald-500/20"><i class="fa-solid fa-chevron-right"></i></button>
@@ -272,19 +447,19 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <div class="glass rounded-3xl p-6 bg-emerald-500/5 border-emerald-500/20 flex justify-between items-center">
-                        <div><h4 class="font-bold text-emerald-400" id="lbl-score-today">আজকের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" id="lbl-pts-today">Points Today</div></div>
+                        <div><h4 class="font-bold text-emerald-400" data-lang="score_today">আজকের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" data-lang="pts_today">Points Today</div></div>
                         <div class="text-5xl font-black text-white" id="today-score">0</div>
                     </div>
                     <div class="glass rounded-3xl p-6 bg-indigo-500/5 border-indigo-500/20 flex justify-between items-center">
-                        <div><h4 class="font-bold text-indigo-400" id="lbl-score-total">পুরো রমাদানের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" id="lbl-pts-total">Total Progress Score</div></div>
+                        <div><h4 class="font-bold text-indigo-400" data-lang="score_total">পুরো রমাদানের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" data-lang="pts_total">Total Progress Score</div></div>
                         <div class="text-5xl font-black text-white" id="total-score">0</div>
                     </div>
                 </div>
                 <div class="lg:col-span-2 space-y-4">
                     <div class="glass rounded-3xl p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="font-bold text-emerald-400" id="lbl-daily-tasks">দৈনিক করণীয়সমূহ</h4>
-                            <div class="text-xs bg-emerald-500/20 px-3 py-1 rounded-full" id="lbl-pts-rule">প্রতিটি ১ পয়েন্ট</div>
+                            <h4 class="font-bold text-emerald-400" data-lang="daily_tasks">দৈনিক করণীয়সমূহ</h4>
+                            <div class="text-xs bg-emerald-500/20 px-3 py-1 rounded-full" data-lang="pts_rule">প্রতিটি ১ পয়েন্ট</div>
                         </div>
                         <div class="space-y-3" id="daily-tasks-list"></div>
                     </div>
@@ -293,14 +468,14 @@
                     <div class="glass rounded-3xl p-6 border-l-4 border-orange-500">
                         <div class="mb-4">
                             <h4 class="font-bold text-orange-400" id="phase-title">১০ দিনের ব্লক আমল</h4>
-                            <div class="text-[10px] text-gray-400 uppercase mt-1" id="lbl-phase-rule">১০ দিনে অন্তত একবার (১ পয়েন্ট)</div>
+                            <div class="text-[10px] text-gray-400 uppercase mt-1" data-lang="phase_rule">১০ দিনে অন্তত একবার (১ পয়েন্ট)</div>
                         </div>
                         <div class="space-y-3" id="ten-day-tasks-list"></div>
                     </div>
                     <div class="glass rounded-3xl p-6 border-l-4 border-emerald-500">
                         <div class="mb-4">
-                            <h4 class="font-bold text-emerald-400" id="lbl-imp-tasks">অত্যন্ত গুরুত্বপূর্ণ আমল</h4>
-                            <div class="text-[10px] text-gray-400 uppercase mt-1" id="lbl-imp-rule">প্রতিটি ৫ পয়েন্ট</div>
+                            <h4 class="font-bold text-emerald-400" data-lang="imp_tasks">অত্যন্ত গুরুত্বপূর্ণ আমল</h4>
+                            <div class="text-[10px] text-gray-400 uppercase mt-1" data-lang="imp_rule">প্রতিটি ৫ পয়েন্ট</div>
                         </div>
                         <div class="space-y-3" id="important-tasks-list"></div>
                     </div>
@@ -308,16 +483,11 @@
             </div>
         </div>
 
-        <div id="page-rakat" class="page">
-            <h3 class="text-2xl font-bold mb-8 text-center text-gradient" id="lbl-rakat-title">নামাজের রাকাত সমুহ</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="rakat-container"></div>
-        </div>
-
         <div id="page-settings" class="page">
-            <h3 class="text-2xl font-bold mb-8 text-center text-gradient" id="lbl-settings-title">Settings / সেটিংস</h3>
+            <h3 class="text-2xl font-bold mb-8 text-center text-gradient" data-lang="settings_title">Settings / সেটিংস</h3>
             <div class="max-w-md mx-auto space-y-6">
                 <div class="glass rounded-3xl p-6">
-                    <h4 class="font-bold text-emerald-400 mb-4" id="lbl-set-lang">Language / ভাষা</h4>
+                    <h4 class="font-bold text-emerald-400 mb-4" data-lang="set_lang">Language / ভাষা</h4>
                     <div class="flex gap-4">
                         <button onclick="setLanguage('en')" id="btn-lang-en" class="lang-btn flex-1 flex flex-col items-center">
                             <span class="font-bold">English</span>
@@ -328,18 +498,18 @@
                     </div>
                 </div>
                 <div class="glass rounded-3xl p-6">
-                    <h4 class="font-bold text-emerald-400 mb-4" id="lbl-set-loc">Location / স্থান</h4>
+                    <h4 class="font-bold text-emerald-400 mb-4" data-lang="set_loc">Location / স্থান</h4>
                     <div class="space-y-4">
                         <div class="flex gap-4">
                             <button onclick="setLocationMode('auto')" id="btn-loc-auto" class="lang-btn flex-1 flex flex-col items-center">
-                                <span class="font-bold text-xs" id="lbl-loc-auto">Automatic</span>
+                                <span class="font-bold text-xs" data-lang="loc_auto">Automatic</span>
                             </button>
                             <button onclick="setLocationMode('manual')" id="btn-loc-manual" class="lang-btn flex-1 flex flex-col items-center">
-                                <span class="font-bold text-xs" id="lbl-loc-manual">Manual</span>
+                                <span class="font-bold text-xs" data-lang="loc_manual">Manual</span>
                             </button>
                         </div>
                         <div id="manual-loc-select" class="hidden">
-                            <label class="text-[10px] text-gray-400 uppercase mb-2 block" id="lbl-select-dist">Select District</label>
+                            <label class="text-[10px] text-gray-400 uppercase mb-2 block" data-lang="select_dist">Select District</label>
                             <select id="dist-select" onchange="updateManualDistrict()">
                                 <option value="dhaka">Dhaka / ঢাকা</option>
                                 <option value="chittagong">Chittagong / চট্টগ্রাম</option>
@@ -367,6 +537,134 @@
         </footer>
     </div>
 
+    <!-- PRAYER DETAILS MODAL -->
+    <div id="prayer-details-modal" class="fixed inset-0 z-[100] bg-[#020617]/90 hidden flex-col items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300 opacity-0">
+        <div class="glass rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-emerald-500/20 shadow-2xl transform scale-95 transition-transform duration-300" id="prayer-modal-content">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-900/80 sticky top-0 z-20">
+                <h3 class="text-2xl font-bold text-emerald-400 flex items-center gap-3">
+                    <i id="pm-icon" class="fa-solid fa-mosque"></i> <span id="pm-title">নামাজ</span>
+                </h3>
+                <button onclick="closePrayerModal()" class="w-10 h-10 rounded-full bg-slate-800 border border-white/5 text-slate-400 hover:text-white hover:bg-red-500/80 transition-all flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 md:p-8 overflow-y-auto flex-1 space-y-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 to-[#020617]">
+                
+                <div>
+                    <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol"></i> <span data-lang="rakat_breakdown">রাকাতের বিবরণ</span>
+                    </h4>
+                    <div id="pm-rakat-container" class="space-y-2"></div>
+                </div>
+
+                <div class="bg-emerald-900/20 border border-emerald-500/20 rounded-2xl p-5">
+                    <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-hands-praying"></i> <span data-lang="niyyat_title">ফরজ নামাজের নিয়ত</span>
+                    </h4>
+                    <div id="pm-niyyat-container" class="space-y-3"></div>
+                    <p class="text-xs text-gray-400 mt-4 pt-4 border-t border-emerald-500/20 italic" data-lang="niyyat_note">* মনে মনে আল্লাহর সন্তুষ্টির উদ্দেশ্যে নির্দিষ্ট ওয়াক্তের নামাজের এরাদা (ইচ্ছে) করাই মূল নিয়ত। মুখে আরবি বা বাংলায় বলা মুস্তাহাব।</p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open"></i> <span data-lang="common_duas">নামাজের প্রয়োজনীয় দোয়া</span>
+                    </h4>
+                    <div class="space-y-4">
+                        <div id="pm-witr-dua" class="hidden dua-block border-l-4 border-orange-500">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">বিতর নামাজ</span>
+                                <h5 class="text-orange-400 font-bold text-lg">দোয়া কুনুত</h5>
+                            </div>
+                            <p class="text-2xl arabic-text text-right mb-4 text-white leading-loose" dir="rtl">اللَّهُمَّ إِنَّا نَسْتَعِينُكَ وَنَسْتَغْفِرُكَ وَنُؤْمِنُ بِكَ وَنَتَوَكَّلُ عَلَيْكَ وَنُثْنِي عَلَيْكَ الْخَيْرَ وَنَشْكُرُكَ وَلَا نَكْفُرُكَ وَنَخْلَعُ وَنَتْرُكُ مَنْ يَفْجُرُكَ اللَّهُمَّ إِيَّاكَ نَعْبُدُ وَلَكَ نُصَلِّي وَنَسْجُدُ وَإِلَيْكَ نَسْعَى وَنَحْفِدُ نَرْجُو رَحْمَتَكَ وَنَخْشَى عَذَابَكَ إِنَّ عَذَابَكَ بِالْكُفَّارِ مُلْحِقٌ</p>
+                            <p class="text-sm text-gray-300 mb-3 leading-relaxed"><span class="text-orange-400/80 font-bold text-[10px] uppercase tracking-wider">উচ্চারণ:</span> আল্লাহুম্মা ইন্না নাসতাঈনুকা ওয়া নাসতাগফিরুকা, ওয়া নু'মিনু বিকা ওয়া নাতাওয়াক্কালু আলাইকা, ওয়া নুছনী আলাইকাল খাইর, ওয়া নাশকুরুকা ওয়া লা নাকফুরুকা, ওয়া নাখলাউ ওয়া নাতরুকু মাঁই ইয়াফজুরুকা। আল্লাহুম্মা ইয়্যাকা না'বুদু ওয়া লাকা নুসাল্লী ওয়া নাসজুদু, ওয়া ইলাইকা নাস'আ ওয়া নাহফিদু, নারজু রাহমাতাকা ওয়া নাখশা আজাবাকা, ইন্না আজাবাকা বিল কুফফারি মুলহিক্ব।</p>
+                            <p class="text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-3"><span class="text-orange-400/80 font-bold text-[10px] uppercase tracking-wider">অর্থ:</span> হে আল্লাহ! আমরা তোমারই কাছে সাহায্য চাই এবং তোমারই কাছে ক্ষমা চাই। তোমার ওপর ঈমান আনি, তোমার ওপর ভরসা করি এবং তোমার সকল উত্তম প্রশংসা করি। আমরা তোমার প্রতি কৃতজ্ঞতা প্রকাশ করি, অকৃতজ্ঞ হই না। যারা তোমার অবাধ্য হয়, তাদের আমরা বর্জন করি ও ছেড়ে দিই। হে আল্লাহ! আমরা কেবল তোমারই ইবাদত করি, তোমারই জন্য নামাজ পড়ি এবং সিজদাহ করি। তোমার দিকেই আমরা ছুটে যাই এবং এগিয়ে আসি। আমরা তোমার রহমতের আশা করি এবং তোমার শাস্তিকে ভয় করি। নিশ্চয়ই তোমার শাস্তি কাফিরদের ওপরই পতিত হবে।</p>
+                            
+                            <div class="mt-6 pt-4 border-t border-white/10 bg-orange-500/5 p-4 rounded-xl">
+                                <h5 class="text-orange-400 font-bold text-sm mb-3">বিতর নামাজের নিয়ত:</h5>
+                                <p class="text-xl arabic-text text-right mb-3 text-white leading-loose" dir="rtl">نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى ثَلَاثَ رَكَعَاتِ صَلَاةِ الْوِتْرِ وَاجِبُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ</p>
+                                <p class="text-sm text-gray-300 leading-relaxed"><span class="text-orange-400/80 font-bold text-[10px] uppercase">উচ্চারণ:</span> নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা সালাসা রাকাআতি সালাতিল বিতরি ওয়াজিবুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।</p>
+                            </div>
+                        </div>
+
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">ছানা (তাকবীরে তাহরীমার পর)</h5>
+                            <p class="text-2xl arabic-text text-right mb-3 text-white leading-loose" dir="rtl">سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، وَتَبَارَكَ اسْمُكَ، وَتَعَالَى جَدُّكَ، وَلَا إِلَهَ غَيْرُكَ</p>
+                            <p class="text-sm text-gray-300 mb-2 leading-relaxed"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">উচ্চারণ:</span> সুবহানাকা আল্লাহুম্মা ওয়া বিহামদিকা ওয়া তাবারাকাসমুকা ওয়া তা'য়ালা জাদ্দুকা ওয়া লা-ইলাহা গাইরুকা।</p>
+                            <p class="text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-2"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">অর্থ:</span> হে আল্লাহ! আপনি পবিত্র, আপনার প্রশংসা বর্ণনা করছি, আপনার নাম বরকতময়, আপনার মহিমা সুউচ্চ এবং আপনি ব্যতীত অন্য কোনো মাবুদ নেই।</p>
+                        </div>
+
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">রুকু ও সেজদার তাসবীহ</h5>
+                            <div class="mb-4">
+                                <p class="text-[12px] font-bold text-orange-300 mb-1">রুকুর তাসবীহ:</p>
+                                <p class="text-2xl arabic-text text-right mb-1 text-white" dir="rtl">سُبْحَانَ رَبِّيَ الْعَظِيمِ</p>
+                                <p class="text-sm text-gray-300"><span class="text-emerald-500/80 font-bold text-[10px]">উচ্চারণ:</span> সুবহানা রাব্বিয়াল আযীম (অর্থ: আমার মহান রবের পবিত্রতা বর্ণনা করছি)</p>
+                            </div>
+                            <div class="border-t border-white/5 pt-3">
+                                <p class="text-[12px] font-bold text-orange-300 mb-1">সেজদার তাসবীহ:</p>
+                                <p class="text-2xl arabic-text text-right mb-1 text-white" dir="rtl">سُبْحَانَ رَبِّيَ الْأَعْلَى</p>
+                                <p class="text-sm text-gray-300"><span class="text-emerald-500/80 font-bold text-[10px]">উচ্চারণ:</span> সুবহানা রাব্বিয়াল আ'লা (অর্থ: আমার সর্বোচ্চ রবের পবিত্রতা বর্ণনা করছি)</p>
+                            </div>
+                        </div>
+
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">আত্তাহিয়্যাতু (তাশাহহুদ)</h5>
+                            <p class="text-2xl arabic-text text-right mb-3 text-white leading-loose" dir="rtl">التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ، السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ، السَّلَامُ عَلَيْنَا وَعَلَى عِبَادِ اللَّهِ الصَّالِحِينَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ</p>
+                            <p class="text-sm text-gray-300 mb-2 leading-relaxed"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">উচ্চারণ:</span> আত্তাহিয়্যাতু লিল্লাহি ওয়াস সালাওয়াতু ওয়াত্ তাইয়্যিবাতু। আসসালামু আলাইকা আইয়্যুহান নাবিয়্যু ওয়া রাহমাতুল্লাহি ওয়া বারাকাতুহু। আসসালামু আলাইনা ওয়া আলা ইবাদিল্লাহিস সালিহীন। আশহাদু আল-লা ইলাহা ইল্লাল্লাহু ওয়া আশহাদু আন্না মুহাম্মাদান আবদুহু ওয়া রাসূলুহু।</p>
+                            <p class="text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-2"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">অর্থ:</span> সমস্ত মৌখিক, শারীরিক ও আর্থিক ইবাদত আল্লাহর জন্য। হে নবী! আপনার ওপর আল্লাহর শান্তি, রহমত ও বরকত বর্ষিত হোক। আমাদের ও আল্লাহর নেক বান্দাদের ওপর শান্তি বর্ষিত হোক। আমি সাক্ষ্য দিচ্ছি যে, আল্লাহ ছাড়া আর কোনো উপাস্য নেই এবং আমি আরও সাক্ষ্য দিচ্ছি যে, মুহাম্মদ (সা.) আল্লাহর বান্দা ও রাসূল।</p>
+                        </div>
+
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">দরূদ শরীফ</h5>
+                            <p class="text-2xl arabic-text text-right mb-3 text-white leading-loose" dir="rtl">اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَجِيدٌ، اللَّهُمَّ بَارِكْ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا بَارَكْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَجِيدٌ</p>
+                            <p class="text-sm text-gray-300 mb-2 leading-relaxed"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">উচ্চারণ:</span> আল্লাহুম্মা সাল্লি আলা মুহাম্মাদিঁউ ওয়া আলা আলি মুহাম্মাদিন কামা সাল্লাইতা আলা ইব্রাহীমা ওয়া আলা আলি ইব্রাহীমা ইন্নাকা হামীদুম মাজীদ। আল্লাহুম্মা বারিক আলা মুহাম্মাদিঁউ ওয়া আলা আলি মুহাম্মাদিন কামা বারাকতা আলা ইব্রাহীমা ওয়া আলা আলি ইব্রাহীমা ইন্নাকা হামীদুম মাজীদ।</p>
+                            <p class="text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-2"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">অর্থ:</span> হে আল্লাহ! আপনি মুহাম্মদ (সা.) এবং তাঁর বংশধরের ওপর রহমত বর্ষণ করুন, যেমন আপনি ইব্রাহিম (আ.) এবং তাঁর বংশধরের ওপর রহমত বর্ষণ করেছিলেন। নিশ্চয়ই আপনি প্রশংসিত ও সম্মানিত। হে আল্লাহ! আপনি মুহাম্মদ (সা.) এবং তাঁর বংশধরের ওপর বরকত বর্ষণ করুন, যেমন আপনি ইব্রাহিম (আ.) এবং তাঁর বংশধরের ওপর বরকত বর্ষণ করেছিলেন। নিশ্চয়ই আপনি প্রশংসিত ও সম্মানিত।</p>
+                        </div>
+
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">দোয়ায়ে মাসূরা</h5>
+                            <p class="text-2xl arabic-text text-right mb-3 text-white leading-loose" dir="rtl">اللَّهُمَّ إِنِّي ظَلَمْتُ نَفْسِي ظُلْمًا كَثِيرًا، وَلَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ، فَاغْفِرْ لِي مَغْفِرَةً مِنْ عِنْدِكَ، وَارْحَمْنِي إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ</p>
+                            <p class="text-sm text-gray-300 mb-2 leading-relaxed"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">উচ্চারণ:</span> আল্লাহুম্মা ইন্নী যালামতু নাফসী যুলমান কাসীরাওঁ ওয়া লা ইয়াগফিরুয যুনূবা ইল্লা আনতা; ফাগফির লী মাগফিরাতাম মিন ইনদিকা ওয়ারহামনী ইন্নাকা আনতাল গাফুরুর রাহীম।</p>
+                            <p class="text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-2"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider">অর্থ:</span> হে আল্লাহ! আমি আমার নিজের ওপর অনেক জুলুম করেছি। আর আপনি ছাড়া গুনাহ মাফকারী আর কেউ নেই। সুতরাং আপনি আপনার পক্ষ থেকে আমাকে বিশেষভাবে ক্ষমা করুন এবং আমার ওপর রহম করুন। নিশ্চয়ই আপনি ক্ষমাশীল ও দয়ালু।</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Post-Prayer Duas -->
+                <div>
+                    <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-hands-holding-circle"></i> <span data-lang="post_prayer_duas">নামাজের পরের আমল ও দোয়া</span>
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-2">ইস্তিগফার (সালাম ফিরানোর পরপর ৩ বার)</h5>
+                            <p class="text-2xl arabic-text text-right mb-2 text-white" dir="rtl">أَسْتَغْفِرُ اللَّهَ</p>
+                            <p class="text-sm text-gray-300"><span class="text-emerald-500/80 font-bold text-[10px]">উচ্চারণ:</span> আস্তাগফিরুল্লাহ (অর্থ: আমি আল্লাহর কাছে ক্ষমা প্রার্থনা করছি)।</p>
+                        </div>
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-2">তাসবীহে ফাতেমী</h5>
+                            <ul class="text-sm text-gray-300 space-y-2">
+                                <li class="flex items-center justify-between border-b border-white/5 pb-2"><span class="text-2xl arabic-text text-white">سُبْحَانَ اللَّهِ</span> <span>সুবহানাল্লাহ (৩৩ বার)</span></li>
+                                <li class="flex items-center justify-between border-b border-white/5 pb-2"><span class="text-2xl arabic-text text-white">الْحَمْدُ لِلَّهِ</span> <span>আলহামদুলিল্লাহ (৩৩ বার)</span></li>
+                                <li class="flex items-center justify-between"><span class="text-2xl arabic-text text-white">اللَّهُ أَكْبَرُ</span> <span>আল্লাহু আকবার (৩৪ বার)</span></li>
+                            </ul>
+                        </div>
+                        <div class="dua-block">
+                            <h5 class="text-emerald-300 font-bold mb-3">আয়াতুল কুরসী (প্রত্যেক ফরজ নামাজের পর)</h5>
+                            <p class="text-2xl arabic-text text-right mb-4 text-white leading-loose" dir="rtl">اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ</p>
+                            <p class="text-sm text-gray-300 mb-3 leading-relaxed"><span class="text-emerald-500/80 font-bold text-[10px] uppercase tracking-wider block mb-1">উচ্চারণ:</span> আল্লাহু লা ইলাহা ইল্লা হুওয়াল হাইয়্যুল ক্বাইয়্যুম। লা তা'খুযুহু সিনাতুঁউ ওয়ালা নাউম। লাহু মা ফিস্ সামাওয়াতি ওয়ামা ফিল আরদ্ব। মান যাল্লাযী ইয়াশফায়ু ইনদাহু ইল্লা বিইজনিহি। ইয়া'লামু মা বাইনা আইদীহিম ওয়ামা খালফাহুম। ওয়ালা ইউহীতূনা বিশাইয়িম মিন ইলমিহি ইল্লা বিমা শাআ। ওয়াসিয়া কুরসিয়্যুহুস সামাওয়াতি ওয়াল আরদ্ব। ওয়ালা ইয়াউদুহু হিফযুহুমা ওয়াহুয়াল আলিয়্যুল আযীম।</p>
+                            <div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl mt-3">
+                                <p class="text-xs text-emerald-400 italic">ফজিলত: যে ব্যক্তি প্রত্যেক ফরজ নামাজের পর আয়াতুল কুরসী পাঠ করবে, তার জান্নাতে প্রবেশের পথে মৃত্যু ছাড়া আর কোনো বাধা থাকবে না। (নাসায়ী: ৯৮৪৮)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Quran Player -->
     <div id="quran-floating-player" class="fixed bottom-[90px] left-1/2 -translate-x-1/2 w-[95vw] max-w-lg glass rounded-2xl px-4 py-3 flex justify-between items-center z-[60] transition-all duration-500 translate-y-[150%] opacity-0 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
         <div class="flex items-center gap-3 overflow-hidden cursor-pointer" onclick="restoreSurahView()">
@@ -379,7 +677,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2 shrink-0 pl-2">
-            <button onclick="toggleFloatingPlay()" class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-400 transition-all shadow-md">
+            <button onclick="toggleFloatingPlay(event)" class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-400 transition-all shadow-md">
                 <i id="floating-play-icon" class="fa-solid fa-pause"></i>
             </button>
             <button onclick="stopPlayback()" class="w-10 h-10 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
@@ -388,32 +686,40 @@
         </div>
     </div>
 
-    <!-- Full Ramadan Calendar Modal -->
-    <div id="full-calendar-modal" class="fixed inset-0 z-[100] bg-black/80 hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="glass rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden border border-white/10 shadow-2xl transform scale-95 transition-transform duration-300" id="full-calendar-content-box">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
-                <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-check"></i> <span data-lang="full_ramadan_cal">Ramadan Calendar 2026</span>
-                </h3>
-                <button onclick="closeFullRamadanCalendar()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors flex items-center justify-center">
-                    <i class="fa-solid fa-times"></i>
-                </button>
+    <!-- Full Screen Ramadan Calendar Modal -->
+    <div id="full-calendar-modal" class="fixed inset-0 z-[100] bg-[#020617] hidden flex-col transition-opacity duration-300 opacity-0 overflow-hidden">
+        <div class="p-4 md:p-6 border-b border-white/10 flex justify-between items-center bg-slate-900/90 sticky top-0 z-20 backdrop-blur-xl shadow-lg">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-emerald-400 flex items-center gap-3">
+                    <i class="fa-solid fa-calendar-check text-2xl"></i> <span data-lang="full_ramadan_cal">Ramadan Calendar 2026</span>
+                </h2>
             </div>
-            <div class="p-4 overflow-y-auto flex-1 bg-slate-900/20 space-y-2" id="full-calendar-list">
-                <!-- Content populated dynamically -->
-            </div>
+            <button onclick="closeFullRamadanCalendar()" class="w-10 h-10 rounded-full bg-slate-800 border border-white/5 text-slate-400 hover:text-white hover:bg-red-500/80 hover:border-red-500 transition-all flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 to-[#020617]" id="full-calendar-list">
+            <!-- Content populated dynamically -->
         </div>
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 glass rounded-full px-4 py-4 flex gap-4 md:gap-8 items-center z-50 overflow-x-auto max-w-[95vw]">
-        <button onclick="switchPage('namaz')" id="nav-namaz" class="nav-item active flex flex-col items-center gap-1 transition-all flex-shrink-0">
+    <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 glass rounded-full px-4 py-4 flex gap-4 md:gap-8 items-center z-50 overflow-x-auto max-w-[95vw] shadow-2xl">
+        <button onclick="switchPage('dashboard')" id="nav-dashboard" class="nav-item active flex flex-col items-center gap-1 transition-all flex-shrink-0">
+            <i class="fa-solid fa-house text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="dashboard">ড্যাশবোর্ড</span>
+        </button>
+        <button onclick="switchPage('namaz')" id="nav-namaz" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
             <i class="fa-solid fa-mosque text-lg md:text-xl"></i>
             <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="namaz">নামাজ</span>
         </button>
         <button onclick="switchPage('quran')" id="nav-quran" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
             <i class="fa-solid fa-book-quran text-lg md:text-xl"></i>
             <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="quran">কুরআন</span>
+        </button>
+        <button onclick="switchPage('hadith')" id="nav-hadith" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-book-open-reader text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight">হাদিস</span>
         </button>
         <button onclick="switchPage('sawom')" id="nav-sawom" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
             <i class="fa-solid fa-moon text-lg md:text-xl"></i>
@@ -422,10 +728,6 @@
         <button onclick="switchPage('planner')" id="nav-planner" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
             <i class="fa-solid fa-calendar-check text-lg md:text-xl"></i>
             <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="planner">প্ল্যানার</span>
-        </button>
-        <button onclick="switchPage('rakat')" id="nav-rakat" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
-            <i class="fa-solid fa-list-ol text-lg md:text-xl"></i>
-            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="rakat">রাকাত</span>
         </button>
         <button onclick="switchPage('settings')" id="nav-settings" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
             <i class="fa-solid fa-gear text-lg md:text-xl"></i>
@@ -440,15 +742,15 @@
         var lang = localStorage.getItem('app_lang') || 'bn';
         var locMode = localStorage.getItem('loc_mode') || 'auto';
         var manualDist = localStorage.getItem('manual_dist') || 'dhaka';
-        var currentPage = 'namaz';
+        var currentPage = 'dashboard';
         var plannerDay = 1;
         var currentRamadanDay = 1;
         var prayerTimings = {};
         var nextDayTimings = {};
         var scheduleData = [];
-        var allSurahs = [];
         
-        // Single robust Audio Controller variables
+        // Quran Player variables
+        var allSurahs = [];
         const globalAudio = new Audio();
         let audioQueue = [];
         let currentQueueIndex = 0;
@@ -460,11 +762,14 @@
             animFrame: null
         };
 
+        // Hadith Variables
+        var hadithData = { bukhari: null, muslim: null };
+        var activeHadithBook = null;
+
         var prayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
         var prayerIcons = { 'Fajr': 'fa-cloud-sun', 'Dhuhr': 'fa-sun', 'Asr': 'fa-mountain-sun', 'Maghrib': 'fa-cloud-moon', 'Isha': 'fa-moon' };
         const oddNights = [21, 23, 25, 27, 29];
 
-        // 114 Surah Names in Bengali
         const surahNamesBn = [
             "আল ফাতিহা", "আল বাকারা", "আলে ইমরান", "আন নিসা", "আল মায়িদাহ", "আল আন'আম", "আল আ'রাফ", "আল আনফাল", "আত তওবা", "ইউনুস",
             "হুদ", "ইউসুফ", "আর রাদ", "ইব্রাহীম", "আল হিজর", "আন নাহল", "বনী ইসরাঈল", "আল কাহফ", "মারইয়াম", "ত্বোয়া-হা",
@@ -480,16 +785,57 @@
             "আল লাহাব", "আল ইখলাস", "আল ফালাক", "আন নাস"
         ];
 
-        const plannerDailyTasks_EN = ["Tahajjud?", "Fast?", "Fajr Jamat?", "Recite Yasin?", "No Quarrel?", "No Backbiting?", "Zuhr Jamat?", "Read Quran?", "Asr Jamat?", "Durood 100x?", "Istighfar 100x?", "Maghrib Jamat?", "Isha Jamat?", "Full Tarawih?", "Serve Parents?"];
-        const plannerDailyTasks_BN = ["তাহাজ্জুদ পড়েছি?", "রোযা রেখেছি?", "ফজর জামাতে?", "সূরা ইয়াসীন পড়েছি?", "বিবাদ করিনি?", "গীবত করিনি?", "যোহর জামাতে?", "কুরআন পড়েছি?", "আসর জামাতে?", "দরুদ ১০০ বার?", "ইস্তিগফার ১০০ বার?", "মাগরিব জামাতে?", "এশা জামাতে?", "পূর্ণ তারাবীহ?", "বাবা-মায়ের সেবা?"];
-
-        const rakatData = [
-            { id: 'fajr', total: 4, breakdown: [{ l: 'sun_muak', v: 2 }, { l: 'fard', v: 2 }] },
-            { id: 'zuhr', total: 12, breakdown: [{ l: 'sun_muak', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }] },
-            { id: 'asr', total: 8, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }] },
-            { id: 'maghrib', total: 7, breakdown: [{ l: 'fard', v: 3 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }] },
-            { id: 'isha', total: 15, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'witr', v: 3 }, { l: 'nafl', v: 2 }] }
+        // Daily Ramadan Specific Hadith (Authentic)
+        const dailyHadithCollection = [
+            { ar: "إِذَا دَخَلَ رَمَضَانُ فُتِّحَتْ أَبْوَابُ الْجَنَّةِ", bn: "যখন রমজান মাস আসে, তখন জান্নাতের দরজাসমূহ খুলে দেওয়া হয়।", ref: "সহীহ বুখারী: ৩২৭৭" },
+            { ar: "الصِّيَامُ جُنَّةٌ", bn: "রোজা হচ্ছে (জাহান্নামের আগুন ও গুনাহ থেকে বাঁচার) ঢাল স্বরূপ।", ref: "সহীহ বুখারী: ১৮৯৪" },
+            { ar: "تَسَحَّرُوا فَإِنَّ فِي السَّحُورِ بَرَكَةً", bn: "তোমরা সাহরি খাও, কারণ সাহরিতে বরকত রয়েছে।", ref: "সহীহ বুখারী: ১৯২৩" },
+            { ar: "مَنْ لَمْ يَدَعْ قَوْلَ الزُّورِ وَالْعَمَلَ بِهِ فَلَيْسَ لِلَّهِ حَاجَةٌ فِي أَنْ يَدَعَ طَعَامَهُ وَشَرَابَهُ", bn: "যে ব্যক্তি রোজা রেখেও মিথ্যা কথা ও খারাপ কাজ ছাড়তে পারল না, তার পানাহার ত্যাগে আল্লাহর কোনো প্রয়োজন নেই।", ref: "সহীহ বুখারী: ১৯০৩" },
+            { ar: "يَقُولُ اللَّهُ عَزَّ وَجَلَّ الصَّوْمُ لِي وَأَنَا أَجْزِي بِهِ", bn: "আল্লাহ তায়ালা বলেন: রোজা শুধু আমারই জন্য, আর আমি নিজেই এর প্রতিদান দেব।", ref: "সহীহ বুখারী: ১৮৯৪" },
+            { ar: "لاَ يَزَالُ النَّاسُ بِخَيْرٍ مَا عَجَّلُوا الْفِطْرَ", bn: "মানুষ ততদিন কল্যাণের মধ্যে থাকবে, যতদিন তারা সময় হওয়ামাত্রই জলদি ইফতার করবে।", ref: "সহীহ বুখারী: ১৯৫৭" },
+            { ar: "مَنْ صَامَ رَمَضَانَ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ", bn: "যে ব্যক্তি ঈমান ও সওয়াবের আশায় রমজান মাসে রোজা রাখবে, তার অতীতের সব গুনাহ মাফ করে দেওয়া হবে।", ref: "সহীহ বুখারী: ৩৮" },
+            { ar: "لَخُلُوفُ فَمِ الصَّائِمِ أَطْيَبُ عِنْدَ اللَّهِ مِنْ رِيحِ الْمِسْكِ", bn: "রোজাদারের মুখের গন্ধ আল্লাহর কাছে মিশকের সুগন্ধির চেয়েও বেশি প্রিয়।", ref: "সহীহ বুখারী: ১৮৯৪" },
+            { ar: "عُمْرَةٌ فِى رَمَضَانَ تَقْضِى حَجَّةً مَعِى", bn: "রমজান মাসে ওমরাহ আদায় করা আমার সাথে হজ আদায় করার সমতুল্য।", ref: "সহীহ বুখারী: ১৮৬৩" },
+            { ar: "الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ", bn: "যারা দয়া করে, দয়াময় আল্লাহ তাদের প্রতি দয়া করেন। তোমরা জমিনবাসীদের প্রতি দয়া করো, আসমানবাসী তোমাদের প্রতি দয়া করবেন।", ref: "সুনানে আবু দাউদ: ৪৯৪১ (সহীহ)" },
+            { ar: "وَاللَّهِ إِنِّي لأَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ فِي الْيَوْمِ أَكْثَرَ مِنْ سَبْعِينَ مَرَّةً", bn: "আল্লাহর কসম! আমি প্রতিদিন সত্তর বারেরও বেশি আল্লাহর কাছে ক্ষমা প্রার্থনা করি এবং তাওবা করি।", ref: "সহীহ বুখারী: ৬৩০৭" },
+            { ar: "يَنْزِلُ رَبُّنَا تَبَارَكَ وَتَعَالَى كُلَّ لَيْلَةٍ إِلَى السَّمَاءِ الدُّنْيَا حِينَ يَبْقَى ثُلُثُ اللَّيْلِ الآخِرُ", bn: "রাতের যখন শেষ তৃতীয়াংশ অবশিষ্ট থাকে, তখন আমাদের রব প্রথম আসমানে নেমে আসেন এবং বলেন: কে আমাকে ডাকবে আমি তার ডাকে সাড়া দেব? কে আমার কাছে চাইবে আমি তাকে দেব? কে ক্ষমা চাইবে আমি তাকে ক্ষমা করব?", ref: "সহীহ বুখারী: ১১৪৫" },
+            { ar: "أَذْنَبَ عَبْدٌ ذَنْبًا فَقَالَ أَىْ رَبِّ أَذْنَبْتُ ذَنْبًا فَاغْفِرْ لِى", bn: "কোনো বান্দা যখন গুনাহ করে বলে, 'হে আমার রব! আমি গুনাহ করেছি, আপনি আমাকে ক্ষমা করুন।' তখন আল্লাহ বলেন, 'আমার বান্দা জানে তার একজন রব আছেন যিনি গুনাহ মাফ করেন। আমি তাকে ক্ষমা করে দিলাম।'", ref: "সহীহ বুখারী: ৭৫٠٧" },
+            { ar: "سَيِّدُ الاِسْتِغْفَارِ أَنْ تَقُولَ اللَّهُمَّ أَنْتَ رَبِّى، لاَ إِلَهَ إِلاَّ أَنْتَ...", bn: "ক্ষমা প্রার্থনার শ্রেষ্ঠ দোয়া (সায়্যিদুল ইস্তিগফার) হলো: হে আল্লাহ! আপনি আমার রব, আপনি ছাড়া আর কোনো উপাস্য নেই...", ref: "সহীহ বুখারী: ৬৩০৬" },
+            { ar: "اقْرَءُوا الْقُرْآنَ فَإِنَّهُ يَأْتِي يَوْمَ الْقِيَامَةِ شَفِيعًا لِأَصْحَابِهِ", bn: "তোমরা কুরআন তিলাওয়াত করো, কারণ কিয়ামতের দিন এটি তার পাঠকারীর জন্য সুপারিশকারী হিসেবে আসবে।", ref: "সহীহ মুসলিম: ৮০৪" },
+            { ar: "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ", bn: "তোমাদের মধ্যে সর্বোত্তম ব্যক্তি সে, যে নিজে কুরআন শেখে এবং অন্যকে শিক্ষা দেয়।", ref: "সহীহ বুখারী: ৫০২৭" },
+            { ar: "مَا نَقَصَتْ صَدَقَةٌ مِنْ مَالٍ", bn: "দান-সদকা করলে কখনও সম্পদের ঘাটতি হয় না।", ref: "সহীহ মুসলিম: ২৫৮৮" },
+            { ar: "اتَّقُوا النَّارَ وَلَوْ بِشِقِّ تَمْرَةٍ", bn: "একটি খেজুরের অর্ধেক দান করে হলেও তোমরা জাহান্নামের আগুন থেকে বাঁচো।", ref: "সহীহ বুখারী: ১৪১৭" },
+            { ar: "تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ", bn: "তোমার ভাইয়ের দিকে তাকিয়ে মুচকি হাসাও একটি সদকা।", ref: "জামে তিরমিজি: ১৯৫৬ (সহীহ)" },
+            { ar: "يَا ابْنَ آدَمَ إِنَّكَ مَا دَعَوْتَنِي وَرَجَوْتَنِي غَفَرْتُ لَكَ عَلَى مَا كَانَ فِيكَ وَلاَ أُبَالِي", bn: "আল্লাহ বলেন: হে আদম সন্তান! যতক্ষণ তুমি আমাকে ডাকবে এবং আমার কাছে আশা রাখবে, তোমার গুনাহ যতই হোক না কেন, আমি তোমাকে ক্ষমা করে দেব; আমি কারো পরোয়া করি না।", ref: "জামে তিরমিজি: ৩৫৪০ (হাসান/সহীহ)" },
+            { ar: "تَحَرَّوْا لَيْلَةَ الْقَدْرِ فِى الْوِتْرِ مِنَ الْعَشْرِ الأَوَاخِرِ مِنْ رَمَضَانَ", bn: "তোমরা রমজানের শেষ দশকের বেজোড় রাতগুলোতে লাইলাতুল কদর অন্বেষণ করো।", ref: "সহীহ বুখারী: ২০১৭" },
+            { ar: "مَنْ قَامَ لَيْلَةَ الْقَدْرِ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ", bn: "যে ব্যক্তি ঈমান ও সওয়াবের আশায় শবেকদরের রাতে ইবাদত করবে, তার অতীতের সব গুনাহ মাফ করে দেওয়া হবে।", ref: "সহীহ বুখারী: ১৯০১" },
+            { ar: "قُولِي اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي", bn: "আয়েশা (রা.) শবেকদরের দোয়া সম্পর্কে জানতে চাইলে রাসূল (সা.) বলেন: তুমি পড়বে— হে আল্লাহ! নিশ্চয়ই আপনি ক্ষমাশীল, আপনি ক্ষমা করতে ভালোবাসেন। সুতরাং আমাকে ক্ষমা করে দিন।", ref: "জামে তিরমিজি: ৩৫১৩ (সহীহ)" },
+            { ar: "كَانَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ يَجْتَهِدُ فِي الْعَشْرِ الأَوَاخِرِ مَا لاَ يَجْتَهِدُ فِي غَيْرِهِ", bn: "রাসূল (সা.) রমজানের শেষ দশকে ইবাদতে এতোটা পরিশ্রম করতেন, যা অন্য কোনো সময় করতেন না।", ref: "সহীহ মুসলিম: ১১৭৫" },
+            { ar: "كَانَ النَّبِيُّ صلى الله عليه وسلم يَعْتَكِفُ فِي الْعَشْرِ الأَوَاخِرِ مِنْ رَمَضَانَ", bn: "নবী (সা.) রমজানের শেষ দশকে ইতিকাফ করতেন।", ref: "সহীহ বুখারী: ২০২৬" },
+            { ar: "لِلصَّائِمِ فَرْحَتَانِ يَفْرَحُهُمَا إِذَا أَفْطَرَ فَرِحَ، وَإِذَا لَقِيَ رَبَّهُ فَرِحَ بِصَوْمِهِ", bn: "রোজাদারের জন্য দুটি আনন্দ রয়েছে: একটি আনন্দ সে ইফতারের সময় লাভ করে, আর অন্যটি সে তার রবের সাথে সাক্ষাতের সময় রোজার প্রতিদান দেখে লাভ করবে।", ref: "সহীহ বুখারী: ১৯۰৪" },
+            { ar: "مَنْ فَطَّرَ صَائِمًا كَانَ لَهُ مِثْلُ أَجْرِهِ غَيْرَ أَنَّهُ لاَ يَنْقُصُ مِنْ أَجْرِ الصَّائِمِ شَيْئًا", bn: "যে ব্যক্তি কোনো রোজাদারকে ইফতার করাবে, সে ঐ রোজাদারের সমপরিমাণ সওয়াব পাবে। তবে রোজাদারের সওয়াব থেকে বিন্দুমাত্র কমানো হবেবিধা হবে না।", ref: "জামে তিরমিজি: ৮০৭ (সহীহ)" },
+            { ar: "الصَّلَوَاتُ الْخَمْسُ وَالْجُمُعَةُ إِلَى الْجُمُعَةِ وَرَمَضَانُ إِلَى رَمَضَانَ مُكَفِّرَاتٌ مَا بَيْنَهُنَّ", bn: "পাঁচ ওয়াক্ত নামাজ, এক জুমআ থেকে আরেক জুমআ এবং এক রমজান থেকে আরেক রমজান—এগুলোর মধ্যবর্তী সময়ের গুনাহের জন্য কাফফারা স্বরূপ।", ref: "সহীহ মুসলিম: ২৩৩" },
+            { ar: "صُومُوا لِرُؤْيَتِهِ وَأَفْطِرُوا لِرُؤْيَتِهِ", bn: "তোমরা (রমজানের) চাঁদ দেখে রোজা রাখা শুরু করো এবং (শাওয়ালের) চাঁদ দেখে রোজা ভঙ্গ (ঈদ) করো।", ref: "সহীহ বুখারী: ১৯۰۹" },
+            { ar: "فَرَضَ رَسُولُ اللَّهِ صلى الله عليه وسلم زَكَاةَ الْفِطْرِ", bn: "রাসূল (সা.) প্রত্যেক মুসলিমের ওপর সদকাতুল ফিতর (ফিতরা) আদায় করা ফরজ করেছেন।", ref: "সহীহ বুখারী: ১৫০৩" }
         ];
+
+        const rakatData = {
+            'Fajr': { bn: 'ফজর', en: 'Fajr', total: 4, breakdown: [{ l: 'sun_muak', v: 2 }, { l: 'fard', v: 2 }],
+                      niyyatAr: "نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى رَكْعَتَىْ صَلَاةِ الْفَجْرِ فَرْضُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ",
+                      niyyatPronun: "নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা রাকয়াতাই সালাতিল ফাজরি ফারদুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।" },
+            'Dhuhr': { bn: 'যোহর', en: 'Dhuhr', total: 12, breakdown: [{ l: 'sun_muak', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }],
+                       niyyatAr: "نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى اَرْبَعَ رَكَعَاتِ صَلَاةِ الظُّهْرِ فَرْضُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ",
+                       niyyatPronun: "নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা আরবাআ রাকাআতি সালাতিজ জুহরি ফারদুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।" },
+            'Asr': { bn: 'আসর', en: 'Asr', total: 8, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }],
+                     niyyatAr: "نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى اَرْبَعَ رَكَعَاتِ صَلَاةِ الْعَصْرِ فَرْضُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ",
+                     niyyatPronun: "নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা আরবাআ রাকাআতি সালাতিল আসরি ফারদুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।" },
+            'Maghrib': { bn: 'মাগরিব', en: 'Maghrib', total: 7, breakdown: [{ l: 'fard', v: 3 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }],
+                         niyyatAr: "نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى ثَلَاثَ رَكَعَاتِ صَلَاةِ الْمَغْرِبِ فَرْضُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ",
+                         niyyatPronun: "নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা সালাসা রাকাআতি সালাতিল মাগরিবি ফারদুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।" },
+            'Isha': { bn: 'এশা', en: 'Isha', total: 15, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'witr', v: 3 }, { l: 'nafl', v: 2 }],
+                      niyyatAr: "نَوَيْتُ اَنْ اُصَلِّىَ لِلَّهِ تَعَالَى اَرْبَعَ رَكَعَاتِ صَلَاةِ الْعِشَاءِ فَرْضُ اللَّهِ تَعَالَى مُتَوَجِّهًا اِلَى جِهَةِ الْكَعْبَةِ الشَّرِيْفَةِ اَللَّهُ اَكْبَرُ",
+                      niyyatPronun: "নাওয়াইতু আন উসাল্লিয়া লিল্লাহি তায়ালা আরবাআ রাকাআতি সালাতিল ইশায়ি ফারদুল্লাহি তায়ালা মুতাওয়াজজিহান ইলা জিহাতিল কা'বাতিশ শারীফাতি আল্লাহু আকবার।" }
+        };
 
         var userData = JSON.parse(localStorage.getItem('ramadan_planner_data_v5')) || { 
             daily: {}, phase: {}, phase_attr: {}, important: {}, important_attr: {}, oddNights: {}, oddNights_attr: {} 
@@ -515,16 +861,17 @@
 
         const translations = {
             en: {
-                namaz: "Namaz", quran: "Quran", sawom: "Sawom", planner: "Planner", rakat: "Rakat", settings: "Settings",
+                dashboard: "Dashboard", namaz: "Namaz", quran: "Quran", sawom: "Sawom", planner: "Planner", rakat: "Rakat", settings: "Settings",
                 locating: "Locating...", syncing: "Syncing...", synced: "Synced with IFB Calendar",
                 curr_prayer: "Current Prayer", next_prayer: "Next", remaining: "Remaining",
-                waqt_ends_in: "Waqt Ends In", next_prayer_in: "Next Prayer In",
+                waqt_ends_in: "Waqt Ends In", next_prayer_in: "Next Prayer In", makruh_ends_in: "Forbidden Time Ends In",
                 forbidden_time: "Forbidden Time", no_waqt: "No Waqt",
                 status: "Status", alert: "Alert",
                 hijri: "Hijri", region: "Region", region_val: "Dhaka & Surrounding", sunrise: "Sunrise",
-                daily_schedule: "Today's Schedule", sehri_wait: "Waiting for Sehri", sehri_left: "Time left for Sehri",
+                daily_schedule: "Today's Schedule", click_for_details: "Click for details",
+                sehri_wait: "Waiting for Sehri", sehri_left: "Time left for Sehri",
                 iftar_left: "Time left for Iftar", sehri_ends: "Sahri End", iftar_starts: "Iftar",
-                sehri_dua: "Sehri Dua", iftar_dua: "Iftar Dua", sawom_cal: "Ramadan Calendar",
+                roza_niyyat: "Intention for Fasting", iftar_dua: "Iftar Dua", sawom_cal: "Ramadan Calendar",
                 planner_title: "Ramadan Taqwa Planner", ramadan_day: "Ramadan Day",
                 score_today: "Today's Achievement", pts_today: "Points Today",
                 score_total: "Total Achievement", pts_total: "Total Progress Score",
@@ -542,19 +889,31 @@
                 loading: "Loading...", dev_by: "Developed by", grace: "By the grace of Almighty Allah",
                 meccan: "Meccan", medinan: "Medinan", ayahs: "Ayahs", pronun: "EN",
                 bismillah_ar_en: "Bismillaahir Rahmaanir Raheem", bismillah_bn_en: "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
-                view_full_calendar: "View Full Calendar", full_ramadan_cal: "Ramadan Calendar 2026", ramadan: "Ramadan"
+                full_cal_btn: "View Full", full_ramadan_cal: "Ramadan Calendar 2026", ramadan: "Ramadan",
+                pronun_title: "Pronunciation:", meaning_title: "Meaning:",
+                sehri_dua_pronun: "Nawaitu an asuma ghadam min shahri ramadanal mubaraki fardallaka ya allahu fataqabbal minni innaka antas samiul aleem.",
+                sehri_dua_meaning: "O Allah! I intend to keep the obligatory fast of the holy month of Ramadan tomorrow. So accept it from me, indeed You are the All-Hearing and All-Knowing.",
+                iftar_dua_pronun: "Allahumma laka sumtu wa ala rizqika aftartu.",
+                iftar_dua_meaning: "O Allah! I fasted for Your pleasure and am breaking my fast with the provision You gave me.",
+                rakat_breakdown: "Rakat Breakdown", niyyat_title: "Intention for Fard Prayer",
+                niyyat_note: "* The main intention is the firm resolve in the heart to pray a specific prayer for Allah's pleasure. Saying it verbally in Arabic or your native language is recommended.",
+                common_duas: "Essential Duas for Prayer", post_prayer_duas: "Actions & Duas After Prayer",
+                hadith_title: "Al Hadith (Sahih)", daily_hadith_title: "Daily Hadith", daily_hadith_sub: "Daily Inspiration",
+                sahih_bukhari: "Sahih al-Bukhari", sahih_muslim: "Sahih Muslim", downloading_book: "Downloading Hadiths... Please wait.",
+                back_to_books: "Back to Books", back_to_chapters: "Back to Chapters"
             },
             bn: {
-                namaz: "নামাজ", quran: "কুরআন", sawom: "সাওম", planner: "প্ল্যানার", rakat: "রাকাত", settings: "সেটিংস",
+                dashboard: "ড্যাশবোর্ড", namaz: "নামাজ", quran: "কুরআন", sawom: "সাওম", planner: "প্ল্যানার", rakat: "রাকাত", settings: "সেটিংস",
                 locating: "স্থান শনাক্ত করা হচ্ছে...", syncing: "সিঙ্ক হচ্ছে...", synced: "IFB ক্যালেন্ডারের সাথে যুক্ত",
                 curr_prayer: "বর্তমান নামাজ", next_prayer: "পরবর্তী", remaining: "বাকি সময়",
-                waqt_ends_in: "ওয়াক্ত শেষ হতে বাকি", next_prayer_in: "পরবর্তী নামাজ আসতে বাকি",
+                waqt_ends_in: "ওয়াক্ত শেষ হতে বাকি", next_prayer_in: "পরবর্তী ওয়াক্ত শুরু হতে", makruh_ends_in: "নিষিদ্ধ সময় শেষ হতে",
                 forbidden_time: "নামাজ নিষিদ্ধ সময়", no_waqt: "ওয়াক্ত নেই",
                 status: "বর্তমান অবস্থা", alert: "সতর্কতা",
                 hijri: "হিজরি", region: "অঞ্চল", region_val: "ঢাকা ও পার্শ্ববর্তী", sunrise: "সূর্যোদয়",
-                daily_schedule: "আজকের সময়সূচী", sehri_wait: "সাহরির জন্য অপেক্ষা", sehri_left: "সাহরির জন্য সময় বাকি",
+                daily_schedule: "আজকের সময়সূচী", click_for_details: "বিস্তারিত জানতে ক্লিক করুন",
+                sehri_wait: "সাহরির জন্য অপেক্ষা", sehri_left: "সাহরির জন্য সময় বাকি",
                 iftar_left: "ইফতারের জন্য সময় বাকি", sehri_ends: "সাহরি শেষ", iftar_starts: "ইফতার শুরু",
-                sehri_dua: "সাহরির দোয়া", iftar_dua: "ইফতারের দোয়া", sawom_cal: "রমাদান ক্যালেন্ডার",
+                roza_niyyat: "রোজার নিয়ত", iftar_dua: "ইফতারের দোয়া", sawom_cal: "রমাদান ক্যালেন্ডার",
                 planner_title: "তাকওয়া অর্জনে রমাদান প্ল্যানার", ramadan_day: "রমাদানের দিন",
                 score_today: "আজকের অর্জন", pts_today: "আজকের পয়েন্ট",
                 score_total: "পুরো রমাদানের অর্জন", pts_total: "সর্বমোট পয়েন্ট",
@@ -572,7 +931,18 @@
                 loading: "লোড হচ্ছে...", dev_by: "ডেভেলপ করেছেন", grace: "মহান আল্লাহর অশেষ রহমতে",
                 meccan: "মাক্কী", medinan: "মাদানী", ayahs: "আয়াত", pronun: "উচ্চারণ (EN)",
                 bismillah_ar_en: "Bismillaahir Rahmaanir Raheem", bismillah_bn_en: "শুরু করছি আল্লাহর নামে যিনি পরম করুণাময়, অতি দয়ালু।",
-                view_full_calendar: "সম্পূর্ণ ক্যালেন্ডার দেখুন", full_ramadan_cal: "রমাদান ক্যালেন্ডার ২০২৬", ramadan: "রমাদান"
+                full_cal_btn: "সম্পূর্ণ দেখুন", full_ramadan_cal: "রমাদান ক্যালেন্ডার ২০২৬", ramadan: "রমাদান",
+                pronun_title: "উচ্চারণ:", meaning_title: "অর্থ:",
+                sehri_dua_pronun: "নাওয়াইতু আন আসুমা গাদাম মিন শাহরি রমাদ্বানাল মুবারাকি ফারদ্বাল্লাকা ইয়া আল্লাহু ফাতাকাব্বাল মিন্নি ইন্নাকা আংতাস সামিউল আলিম।",
+                sehri_dua_meaning: "হে আল্লাহ! আমি আগামীকাল পবিত্র রমজানের ফরজ রোজা রাখার নিয়ত করছি। সুতরাং তুমি আমার পক্ষ থেকে তা কবুল করো, নিশ্চয়ই তুমি সর্বশ্রোতা ও সর্বজ্ঞানী।",
+                iftar_dua_pronun: "আল্লাহুম্মা লাকা সুমতু ওয়া আলা রিযক্বিকা আফতারতু।",
+                iftar_dua_meaning: "হে আল্লাহ! আমি তোমারই সন্তুষ্টির জন্য রোজা রেখেছি এবং তোমারই দেয়া রিযিক দিয়ে ইফতার করছি।",
+                rakat_breakdown: "রাকাতের বিবরণ", niyyat_title: "ফরজ নামাজের নিয়ত",
+                niyyat_note: "* মনে মনে আল্লাহর সন্তুষ্টির উদ্দেশ্যে নির্দিষ্ট ওয়াক্তের নামাজের এরাদা (ইচ্ছে) করাই মূল নিয়ত। মুখে আরবি বা বাংলায় বলা মুস্তাহাব।",
+                common_duas: "নামাজের প্রয়োজনীয় দোয়া", post_prayer_duas: "নামাজের পরের আমল ও দোয়া",
+                hadith_title: "আল হাদিস (সহিহ)", daily_hadith_title: "আজকের হাদিস", daily_hadith_sub: "রমজানের প্রতিদিনের অনুপ্রেরণা",
+                sahih_bukhari: "সহীহ বুখারী", sahih_muslim: "সহীহ মুসলিম", downloading_book: "হাদিসের খণ্ডগুলো লোড হচ্ছে... দয়া করে অপেক্ষা করুন।",
+                back_to_books: "বইয়ের তালিকায় ফিরুন", back_to_chapters: "অধ্যায়ে ফিরুন"
             }
         };
 
@@ -587,10 +957,26 @@
         function parseSec(timeStr) { if(!timeStr) return 0; const parts = timeStr.split(':'); if (parts.length < 2) return 0; return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60; }
         function t(key) { return (translations[lang] && translations[lang][key.toLowerCase()]) ? translations[lang][key.toLowerCase()] : key; }
         function toArabicNum(n) { const chars = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩']; return n.toString().split('').map(c => chars[c] || c).join(''); }
-        function toBnTime(timeStr) {
-            if(!timeStr) return timeStr;
-            let s = toBnNum(timeStr);
-            return s.replace('AM', 'এএম').replace('PM', 'পিএম');
+        
+        function formatTimeLocale(time24) {
+            if (!time24) return "--:--";
+            let [h, m] = time24.split(':').map(Number);
+            let h12 = h % 12 || 12;
+            let mStr = m.toString().padStart(2, '0');
+            
+            if (lang === 'en') {
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                return `${h12}:${mStr} ${ampm}`;
+            } else {
+                let period = '';
+                if (h >= 4 && h < 12) period = 'সকাল';
+                else if (h >= 12 && h < 15) period = 'দুপুর';
+                else if (h >= 15 && h < 18) period = 'বিকাল';
+                else if (h >= 18 && h < 20) period = 'সন্ধ্যা';
+                else period = 'রাত';
+                
+                return `${period} ${toBnNum(h12)}:${toBnNum(mStr)}`;
+            }
         }
 
         /**
@@ -625,19 +1011,6 @@
         /**
          * 4. Rendering Functions
          */
-        function renderRakat() {
-            const container = document.getElementById('rakat-container'); if (!container) return;
-            container.innerHTML = rakatData.map(r => `
-                <div class="glass rounded-3xl p-6 rakat-card">
-                    <h4 class="text-xl font-bold text-emerald-400 mb-4 flex justify-between">
-                        <span>${t(r.id)}</span>
-                        <span class="text-[10px] bg-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-tighter">${t('total_rakat')}: ${r.total}</span>
-                    </h4>
-                    <div class="space-y-3 text-sm">
-                        ${r.breakdown.map(b => `<div class="flex justify-between border-b border-white/5 pb-2 ${b.l === 'fard' || b.l === 'witr' ? 'font-bold text-white' : 'text-gray-400'}"><span>${t(b.l)}</span><span>${b.v} ${t('rakat_unit')}</span></div>`).join('')}
-                    </div>
-                </div>`).join('') + `<div class="lg:col-span-3 mt-4 glass p-6 rounded-3xl text-[11px] text-gray-400 text-center"><p>${t('note_rakat')}</p></div>`;
-        }
 
         function renderNamazTable(active) {
             const table = document.getElementById('salah-table'); if(!table) return;
@@ -645,16 +1018,17 @@
                 const act = (p === active);
                 let endT = prayerNames[index + 1] ? prayerTimings[prayerNames[index + 1]] : nextDayTimings.Fajr;
                 if (p === 'Fajr') endT = prayerTimings.Sunrise;
-                
-                let startStr = format12h(prayerTimings[p]);
-                let endStr = format12h(endT);
-                
-                if (lang === 'bn') {
-                    startStr = toBnTime(startStr);
-                    endStr = toBnTime(endStr);
+                if (p === 'Asr') {
+                    let asrEndSec = parseSec(prayerTimings.Maghrib) - 900;
+                    let h = Math.floor(asrEndSec / 3600);
+                    let m = Math.floor((asrEndSec % 3600) / 60);
+                    endT = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                 }
+                
+                let startStr = formatTimeLocale(prayerTimings[p]);
+                let endStr = formatTimeLocale(endT);
 
-                return `<div class="prayer-row p-4 rounded-2xl border flex justify-between items-center transition-all duration-300 ${act ? 'active border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.1)]' : 'bg-slate-800/40 border-white/5 hover:bg-slate-800/60'}">
+                return `<div class="prayer-row p-4 rounded-2xl border flex justify-between items-center transition-all duration-300 ${act ? 'active border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.1)]' : 'bg-slate-800/40 border-white/5 hover:bg-slate-800/60'}" onclick="openPrayerModal('${p}')">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors duration-300 ${act ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-700/50 text-slate-400'}"><i class="fa-solid ${prayerIcons[p]}"></i></div>
                         <div>
@@ -672,15 +1046,64 @@
             }).join('');
         }
 
+        window.openPrayerModal = function(pName) {
+            const modal = document.getElementById('prayer-details-modal');
+            const data = rakatData[pName];
+            
+            safeSetText('pm-title', lang === 'bn' ? data.bn : data.en);
+            
+            let html = data.breakdown.map(b => `<div class="flex justify-between border-b border-white/5 pb-2 ${b.l === 'fard' || b.l === 'witr' ? 'font-bold text-white' : 'text-gray-400'}"><span>${t(b.l)}</span><span>${lang === 'bn' ? toBnNum(b.v) : b.v} ${t('rakat_unit')}</span></div>`).join('');
+            html += `<div class="mt-3 text-[11px] text-gray-500 italic">${t('note_rakat')}</div>`;
+            document.getElementById('pm-rakat-container').innerHTML = html;
+            
+            // Dynamic Niyyat Generation
+            let niyyatHtml = `
+                <p class="text-2xl text-right arabic-text mb-3 text-white leading-loose" dir="rtl">${data.niyyatAr}</p>
+                <div class="border-t border-emerald-500/10 pt-3">
+                    <span class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider block mb-1" data-lang="pronun_title">${t('pronun_title')}</span>
+                    <p class="text-sm text-gray-300 leading-relaxed">${data.niyyatPronun}</p>
+                </div>
+            `;
+            document.getElementById('pm-niyyat-container').innerHTML = niyyatHtml;
+            
+            // Toggle Witr specific dua visibility
+            if (pName === 'Isha') {
+                document.getElementById('pm-witr-dua').classList.remove('hidden');
+                document.getElementById('pm-witr-dua').classList.add('block');
+            } else {
+                document.getElementById('pm-witr-dua').classList.add('hidden');
+                document.getElementById('pm-witr-dua').classList.remove('block');
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('prayer-modal-content').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closePrayerModal = function() {
+            const modal = document.getElementById('prayer-details-modal');
+            const content = document.getElementById('prayer-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        };
+
         function renderSawomCalendar() {
             const container = document.getElementById('fasting-calendar'); if(!container) return;
             let html = scheduleData.map((d, i) => {
                 const label = i === 0 ? t('today') : (i === 1 ? t('tomorrow') : d.en.split(',')[0]);
-                const fajrStr = lang === 'bn' ? toBnTime(format12h(d.timings.Fajr)) : format12h(d.timings.Fajr);
-                const maghribStr = lang === 'bn' ? toBnTime(format12h(d.timings.Maghrib)) : format12h(d.timings.Maghrib);
+                const fajrStr = formatTimeLocale(d.timings.Fajr);
+                const maghribStr = formatTimeLocale(d.timings.Maghrib);
+                const monthName = lang === 'bn' && d.hijri.month.en.toLowerCase().includes('ramadan') ? 'রমজান' : d.hijri.month.en;
                 
                 return `<div class="flex justify-between items-center p-3 bg-slate-800/40 rounded-2xl border border-white/5">
-                    <div><div class="font-bold text-xs text-white">${label}</div><div class="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">${lang === 'bn' ? toBnNum(d.hijri.day) : d.hijri.day} ${d.hijri.month.en}</div></div>
+                    <div><div class="font-bold text-xs text-white">${label}</div><div class="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">${lang === 'bn' ? toBnNum(d.hijri.day) : d.hijri.day} ${monthName}</div></div>
                     <div class="flex gap-4 md:gap-6">
                         <div class="text-center"><div class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">${t('sehri_ends')}</div><div class="font-mono text-xs text-slate-200 mt-0.5">${fajrStr}</div></div>
                         <div class="text-center"><div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">${t('iftar_starts')}</div><div class="font-mono text-xs text-slate-200 mt-0.5">${maghribStr}</div></div>
@@ -688,68 +1111,201 @@
                 </div>`;
             }).join('');
             
-            html += `<button onclick="openFullRamadanCalendar()" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-widest hover:bg-emerald-500/10 transition-colors flex items-center justify-center gap-2">
-                <i class="fa-solid fa-calendar-days"></i> ${t('view_full_calendar')}
-            </button>`;
-            
             container.innerHTML = html;
         }
 
+        function renderDailyHadith() {
+            const container = document.getElementById('dash-daily-hadith');
+            if(!container) return;
+            
+            const hIdx = (currentRamadanDay - 1) % dailyHadithCollection.length;
+            const hadith = dailyHadithCollection[hIdx];
+            
+            container.innerHTML = `
+                <div class="arabic-text text-2xl text-right mb-3 text-white leading-loose transition-all duration-500" dir="rtl">${hadith.ar}</div>
+                <div class="border-t border-emerald-500/10 pt-3">
+                    <p class="text-sm md:text-base text-gray-200 leading-relaxed mb-2">${hadith.bn}</p>
+                    <p class="text-[10px] text-emerald-400 font-bold tracking-wider">${hadith.ref}</p>
+                </div>
+            `;
+        }
+
+        // --- NEW HADITH API SYSTEM ---
+        window.openHadithBook = async function(book) {
+            document.getElementById('hadith-book-list').classList.add('hidden');
+            document.getElementById('hadith-loader').classList.remove('hidden');
+            document.getElementById('hadith-loader').classList.add('flex');
+            
+            try {
+                if (!hadithData[book]) {
+                    // Fetch full lightweight datasets from reliable API
+                    const [arRes, bnRes] = await Promise.all([
+                        fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/hadith-api@1/editions/ara-${book}.min.json`),
+                        fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/hadith-api@1/editions/ben-${book}.min.json`)
+                    ]);
+                    hadithData[book] = {
+                        ar: await arRes.json(),
+                        bn: await bnRes.json()
+                    };
+                }
+                activeHadithBook = book;
+                renderHadithChapters();
+            } catch (e) {
+                document.getElementById('hadith-loader').innerHTML = `<p class="text-red-400">ইন্টারনেট সংযোগ চেক করুন!</p>`;
+                setTimeout(() => backToHadithBooks(), 2000);
+            }
+        };
+
+        function renderHadithChapters() {
+            document.getElementById('hadith-loader').classList.add('hidden');
+            document.getElementById('hadith-loader').classList.remove('flex');
+            document.getElementById('hadith-chapter-list').classList.remove('hidden');
+            
+            const metadata = hadithData[activeHadithBook].bn.metadata;
+            safeSetText('active-book-title', metadata.name);
+            
+            const cont = document.getElementById('chapters-container');
+            let html = '';
+            
+            // Limit to first 20 important chapters to keep UI clean
+            const sectionKeys = Object.keys(metadata.sections).filter(k => k !== "0").slice(0, 20);
+            
+            sectionKeys.forEach(key => {
+                const name = metadata.sections[key];
+                const sectionNumStr = lang === 'bn' ? toBnNum(key) : key;
+                html += `
+                <div onclick="openHadithReading('${key}')" class="glass rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-emerald-500/10 hover:border-emerald-500/30 border border-white/5 transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-800 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">${sectionNumStr}</div>
+                        <h4 class="text-sm md:text-base font-bold text-slate-200 group-hover:text-emerald-400 transition-colors line-clamp-1">${name}</h4>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-600 group-hover:text-emerald-400"></i>
+                </div>`;
+            });
+            cont.innerHTML = html;
+        }
+
+        window.openHadithReading = function(sectionId) {
+            document.getElementById('hadith-chapter-list').classList.add('hidden');
+            document.getElementById('hadith-reading-view').classList.remove('hidden');
+            
+            const bookData = hadithData[activeHadithBook];
+            const bounds = bookData.bn.metadata.section_details[sectionId];
+            safeSetText('active-chapter-title', bookData.bn.metadata.sections[sectionId]);
+            
+            // Extract Hadiths within this chapter's range
+            const hadithsBn = bookData.bn.hadiths.filter(h => h.hadithnumber >= bounds.hadithnumber_first && h.hadithnumber <= bounds.hadithnumber_last);
+            const hadithsAr = bookData.ar.hadiths.filter(h => h.hadithnumber >= bounds.hadithnumber_first && h.hadithnumber <= bounds.hadithnumber_last);
+            
+            const cont = document.getElementById('reading-hadiths-container');
+            let html = '';
+            
+            // Load max 30 hadiths per chapter for performance
+            const limit = Math.min(hadithsBn.length, 30);
+            
+            for(let i=0; i<limit; i++) {
+                const hnBn = hadithsBn[i];
+                const hnAr = hadithsAr.find(a => a.hadithnumber === hnBn.hadithnumber) || hnBn;
+                
+                const badgeNum = lang === 'bn' ? toBnNum(hnBn.hadithnumber) : hnBn.hadithnumber;
+                
+                html += `
+                <div class="glass rounded-2xl p-5 md:p-6 relative overflow-hidden group">
+                    <div class="flex justify-between items-center mb-5 border-b border-white/5 pb-3">
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg">হাদিস নং: ${badgeNum}</span>
+                    </div>
+                    <div class="arabic-text text-2xl md:text-3xl text-right mb-5 text-white leading-loose" dir="rtl">${hnAr.text}</div>
+                    <div class="bg-slate-900/40 p-4 rounded-xl border border-white/5">
+                        <p class="text-sm md:text-base text-gray-200 leading-relaxed">${hnBn.text}</p>
+                    </div>
+                </div>`;
+            }
+            cont.innerHTML = html;
+        };
+
+        window.backToHadithBooks = function() {
+            document.getElementById('hadith-chapter-list').classList.add('hidden');
+            document.getElementById('hadith-book-list').classList.remove('hidden');
+        };
+        
+        window.backToHadithChapters = function() {
+            document.getElementById('hadith-reading-view').classList.add('hidden');
+            document.getElementById('hadith-chapter-list').classList.remove('hidden');
+        };
+
         window.openFullRamadanCalendar = function() {
             const modal = document.getElementById('full-calendar-modal');
-            const box = document.getElementById('full-calendar-content-box');
             const list = document.getElementById('full-calendar-list');
             
             let html = '';
-            Object.keys(ramadan2026Data).forEach(dateKey => {
-                const data = ramadan2026Data[dateKey];
-                const dayStr = lang === 'bn' ? toBnNum(data.ramadan) : data.ramadan;
-                const sehriStr = lang === 'bn' ? toBnTime(format12h(data.sehri)) : format12h(data.sehri);
-                const iftarStr = lang === 'bn' ? toBnTime(format12h(data.iftar)) : format12h(data.iftar);
-                const dateDisplay = lang === 'bn' ? toBnNum(dateKey.replace('Feb', 'ফেব্রু').replace('Mar', 'মার্চ')) : dateKey;
-                
-                const isToday = currentRamadanDay === data.ramadan;
-                const bgClass = isToday ? 'bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-slate-800/40 border border-white/5';
-                const textClass = isToday ? 'text-emerald-400' : 'text-slate-200';
-                
+            const phases = [
+                { title: lang === 'bn' ? "রহমতের ১০ দিন (১-১০)" : "1st Ashra: Mercy (1-10)", borderCls: "border-emerald-500/30", bgCls: "bg-emerald-500/10", textCls: "text-emerald-400", ringCls: "ring-2 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]", badgeBg: "bg-emerald-500", start: 1, end: 10 },
+                { title: lang === 'bn' ? "মাগফিরাতের ১০ দিন (১১-২০)" : "2nd Ashra: Forgiveness (11-20)", borderCls: "border-blue-500/30", bgCls: "bg-blue-500/10", textCls: "text-blue-400", ringCls: "ring-2 ring-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]", badgeBg: "bg-blue-500", start: 11, end: 20 },
+                { title: lang === 'bn' ? "নাজাতের ১০ দিন (২১-৩০)" : "3rd Ashra: Salvation (21-30)", borderCls: "border-orange-500/30", bgCls: "bg-orange-500/10", textCls: "text-orange-400", ringCls: "ring-2 ring-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.2)]", badgeBg: "bg-orange-500", start: 21, end: 30 }
+            ];
+
+            phases.forEach(phase => {
                 html += `
-                <div class="flex justify-between items-center p-4 rounded-2xl ${bgClass}">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full ${isToday ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-300'} flex flex-col items-center justify-center font-bold leading-none shrink-0 shadow-inner">
-                            <span class="text-sm">${dayStr}</span>
-                        </div>
-                        <div>
-                            <div class="font-bold ${textClass}">${t('ramadan')} ${dayStr}</div>
-                            <div class="text-[10px] text-slate-400 tracking-wider mt-0.5">${dateDisplay}</div>
-                        </div>
+                <div class="mb-12 max-w-3xl mx-auto">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent to-white/20"></div>
+                        <h3 class="text-xl md:text-2xl font-bold ${phase.textCls} px-6 py-3 rounded-2xl ${phase.bgCls} border ${phase.borderCls} backdrop-blur-sm shadow-lg text-center tracking-wide">${phase.title}</h3>
+                        <div class="h-px flex-1 bg-gradient-to-l from-transparent to-white/20"></div>
                     </div>
-                    <div class="flex gap-4 sm:gap-6 shrink-0">
-                        <div class="text-center">
-                            <div class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mb-0.5">${t('sehri_ends')}</div>
-                            <div class="font-mono text-sm ${isToday ? 'text-emerald-300' : 'text-slate-300'}">${sehriStr}</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider mb-0.5">${t('iftar_starts')}</div>
-                            <div class="font-mono text-sm ${isToday ? 'text-orange-300' : 'text-slate-300'}">${iftarStr}</div>
-                        </div>
-                    </div>
-                </div>`;
+                    <div class="flex flex-col gap-3">
+                `;
+                
+                Object.keys(ramadan2026Data).forEach(dateKey => {
+                    const data = ramadan2026Data[dateKey];
+                    if (data.ramadan >= phase.start && data.ramadan <= phase.end) {
+                        const dayStr = lang === 'bn' ? toBnNum(data.ramadan) : data.ramadan;
+                        const sehriStr = formatTimeLocale(data.sehri);
+                        const iftarStr = formatTimeLocale(data.iftar);
+                        const dateDisplay = lang === 'bn' ? toBnNum(dateKey.replace('Feb', 'ফেব্রু').replace('Mar', 'মার্চ')) : dateKey;
+                        
+                        const isToday = currentRamadanDay === data.ramadan;
+                        const activeStyle = isToday ? phase.ringCls : `border border-white/5 hover:border-white/20`;
+                        const activeCardBg = isToday ? 'bg-slate-800/80' : 'bg-slate-800/40';
+                        
+                        html += `
+                        <div class="glass rounded-2xl p-4 md:p-5 flex justify-between items-center transition-all duration-300 ${activeStyle} ${activeCardBg}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl ${isToday ? `${phase.badgeBg} text-white` : `bg-slate-700/50 ${phase.textCls}`} flex flex-col items-center justify-center font-black leading-none shrink-0 shadow-inner text-xl">
+                                    ${dayStr}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white text-sm md:text-base">${t('ramadan')} ${dayStr}</div>
+                                    <div class="text-[11px] text-slate-400 tracking-wider mt-1">${dateDisplay}</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 md:gap-8 shrink-0 border-l border-white/10 pl-4 md:pl-6">
+                                <div class="text-center">
+                                    <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">${t('sehri_ends')}</div>
+                                    <div class="font-mono text-sm md:text-base ${isToday ? 'text-emerald-300' : 'text-slate-200'}">${sehriStr}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-[10px] text-orange-400 font-bold uppercase tracking-wider mb-1">${t('iftar_starts')}</div>
+                                    <div class="font-mono text-sm md:text-base ${isToday ? 'text-orange-300' : 'text-slate-200'}">${iftarStr}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                });
+                html += `</div></div>`;
             });
+            
             list.innerHTML = html;
             
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
-                box.classList.remove('scale-95');
             }, 10);
         };
 
         window.closeFullRamadanCalendar = function() {
             const modal = document.getElementById('full-calendar-modal');
-            const box = document.getElementById('full-calendar-content-box');
             modal.classList.add('opacity-0');
-            box.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
@@ -969,8 +1525,6 @@
             }
         };
 
-        // --- NEW CENTRALIZED AUDIO QUEUE SYSTEM --- //
-
         function stopPlayback() {
             globalAudio.pause();
             globalAudio.src = "";
@@ -1038,25 +1592,30 @@
         window.playSingleAyah = function(surahNum, ayahNumInSurah) {
             let activeItem = audioQueue[currentQueueIndex];
             
-            if (quranPlayer.isPlaying && quranPlayer.mode === 'single' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
+            if (quranPlayer.isPlaying && quranPlayer.mode === 'full' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
                 pauseQueue();
                 return;
-            } else if (!quranPlayer.isPlaying && quranPlayer.mode === 'single' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
+            } else if (!quranPlayer.isPlaying && quranPlayer.mode === 'full' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
                 resumeQueue();
                 return;
             }
 
             stopPlayback();
-            quranPlayer.mode = 'single';
+            quranPlayer.mode = 'full';
             quranPlayer.surahNum = surahNum;
 
-            if (ayahNumInSurah === 0) {
+            if (ayahNumInSurah === 0 && surahNum !== 1 && surahNum !== 9) {
                 audioQueue.push({ type: 'ar', src: 'https://everyayah.com/data/Alafasy_128kbps/001001.mp3', ayahNum: 0 });
-            } else {
-                const sStr = String(surahNum).padStart(3, '0');
-                const aStr = String(ayahNumInSurah).padStart(3, '0');
-                audioQueue.push({ type: 'ar', src: `https://everyayah.com/data/Alafasy_128kbps/${sStr}${aStr}.mp3`, ayahNum: ayahNumInSurah });
             }
+
+            currentSurahData.ar.ayahs.forEach((a) => {
+                if (a.numberInSurah >= ayahNumInSurah && a.numberInSurah > 0) {
+                    const sStr = String(quranPlayer.surahNum).padStart(3, '0');
+                    const aStr = String(a.numberInSurah).padStart(3, '0');
+                    audioQueue.push({ type: 'ar', src: `https://everyayah.com/data/Alafasy_128kbps/${sStr}${aStr}.mp3`, ayahNum: a.numberInSurah });
+                }
+            });
+
             playQueue();
         };
 
@@ -1233,10 +1792,18 @@
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active', 'text-gray-500'));
             const nav = document.getElementById(`nav-${pId}`); if(nav) nav.classList.add('active');
             document.querySelectorAll('.nav-item:not(.active)').forEach(i => i.classList.add('text-gray-500'));
+            
             if(pId === 'planner') { plannerDay = currentRamadanDay; renderPlanner(); }
             else if(pId === 'quran') { 
                 if (allSurahs.length === 0) loadSurahList(); 
                 else if (quranPlayer.isPlaying) restoreSurahView();
+            }
+            else if(pId === 'hadith') {
+                document.getElementById('hadith-book-list').classList.remove('hidden');
+                document.getElementById('hadith-chapter-list').classList.add('hidden');
+                document.getElementById('hadith-reading-view').classList.add('hidden');
+                document.getElementById('hadith-loader').classList.add('hidden');
+                document.getElementById('hadith-loader').classList.remove('flex');
             }
             else if(pId === 'settings') {
                 document.getElementById('manual-loc-select').classList.toggle('hidden', locMode === 'auto');
@@ -1272,15 +1839,21 @@
             const now = new Date();
             const hj = apiData.date.hijri;
             const mText = hj.month.en.toLowerCase().includes('ramadan') ? 'Ramadan' : hj.month.en;
-            safeSetText('top-ar-date', (lang==='bn') ? `${toBnNum(hj.day)}${getBnSuffix(hj.day)} ${mText==='Ramadan'?'রমজান':mText} ${toBnNum(hj.year)} ${t('hijri')}` : `${hj.day}${getEnSuffix(hj.day)} ${mText} ${hj.year} ${t('hijri')}`);
+            const mTextDisplay = lang === 'bn' && mText === 'Ramadan' ? 'রমজান' : mText;
+            
+            safeSetText('top-ar-date', (lang==='bn') ? `${toBnNum(hj.day)}${getBnSuffix(hj.day)} ${mTextDisplay} ${toBnNum(hj.year)} ${t('hijri')}` : `${hj.day}${getEnSuffix(hj.day)} ${mText} ${hj.year} ${t('hijri')}`);
             safeSetText('top-bn-date', getBanglaDateFull(now));
             const mBn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
             const mEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             safeSetText('top-en-date', lang==='bn' ? `${toBnNum(now.getDate())}${getBnSuffix(now.getDate())} ${mBn[now.getMonth()]} ${toBnNum(now.getFullYear())}` : `${now.getDate()}${getEnSuffix(now.getDate())} ${mEn[now.getMonth()]} ${now.getFullYear()}`);
             
-            const sunriseStr = format12h(prayerTimings.Sunrise);
-            safeSetText('sunrise-time', lang === 'bn' ? toBnTime(sunriseStr) : sunriseStr);
-            safeSetText('hijri-date', (lang === 'bn' ? toBnNum(hj.day) : hj.day) + " " + mText);
+            const sunriseStr = formatTimeLocale(prayerTimings.Sunrise);
+            safeSetText('sunrise-time', sunriseStr);
+            safeSetText('dash-sunrise-time', sunriseStr);
+            safeSetText('hijri-date', (lang === 'bn' ? toBnNum(hj.day) : hj.day) + " " + mTextDisplay);
+            safeSetText('dash-hijri-date', (lang === 'bn' ? toBnNum(hj.day) : hj.day) + " " + mTextDisplay);
+            
+            renderDailyHadith();
         }
 
         function updateUI() {
@@ -1290,28 +1863,26 @@
             const btnEn = document.getElementById('btn-lang-en'), btnBn = document.getElementById('btn-lang-bn');
             if (btnEn) btnEn.classList.toggle('active', lang === 'en');
             if (btnBn) btnBn.classList.toggle('active', lang === 'bn');
+            
             const labels = {
                 'lbl-curr-prayer': 'curr_prayer', 'lbl-next-prayer': 'next_prayer', 'lbl-remaining': 'remaining',
+                'dash-lbl-curr-prayer': 'curr_prayer', 'dash-lbl-remaining': 'remaining',
                 'lbl-hijri': 'hijri', 'lbl-region': 'region', 'val-region': 'region_val', 'lbl-sunrise': 'sunrise',
                 'lbl-daily-schedule': 'daily_schedule', 'lbl-sehri-ends': 'sehri_ends', 'lbl-iftar-starts': 'iftar_starts',
-                'lbl-sehri-dua': 'sehri_dua', 'lbl-iftar-dua': 'iftar_dua', 'lbl-sawom-cal': 'sawom_cal',
+                'lbl-sehri-dua': 'roza_niyyat', 'lbl-iftar-dua': 'iftar_dua', 'lbl-sawom-cal': 'sawom_cal',
                 'lbl-planner-title': 'planner_title', 'lbl-ramadan-day': 'ramadan_day', 'lbl-score-today': 'score_today',
                 'lbl-pts-today': 'pts_today', 'lbl-score-total': 'score_total', 'lbl-pts-total': 'pts_total',
                 'lbl-daily-tasks': 'daily_tasks', 'lbl-pts-rule': 'pts_rule', 'lbl-phase-rule': 'phase_rule',
-                'lbl-imp-tasks': 'imp_tasks', 'lbl-imp-rule': 'imp_rule', 'lbl-rakat-title': 'rakat_title',
-                'lbl-settings-title': 'settings_title', 'lbl-set-lang': 'set_lang', 'lbl-set-loc': 'set_loc',
-                'lbl-loc-auto': 'loc_auto', 'lbl-loc-manual': 'loc_manual', 'lbl-select-dist': 'select_dist',
-                'lbl-quran-title': 'quran_title', 'lbl-back': 'back'
+                'lbl-imp-tasks': 'imp_tasks', 'lbl-imp-rule': 'imp_rule', 'lbl-settings-title': 'settings_title', 
+                'lbl-set-lang': 'set_lang', 'lbl-set-loc': 'set_loc', 'lbl-quran-title': 'quran_title', 'lbl-back': 'back'
             };
             for (let id in labels) safeSetText(id, t(labels[id]));
             
             const searchInput = document.getElementById('surah-search');
             if(searchInput) searchInput.placeholder = t('search_surah');
 
-            renderRakat();
             if(currentPage === 'planner') renderPlanner();
-            if(currentPage === 'sawom') renderSawomCalendar();
-            if(scheduleData.length > 0) updateDisplayStatic({ date: { hijri: scheduleData[0].hijri } });
+            if(currentPage === 'sawom' || currentPage === 'dashboard') renderSawomCalendar();
             
             if (allSurahs.length > 0 && currentPage === 'quran' && document.getElementById('surah-list-view').classList.contains('hidden') === false) {
                 renderSurahs(allSurahs);
@@ -1352,95 +1923,120 @@
         }
 
         function update() {
-            if (!prayerTimings.Fajr || currentPage === 'rakat' || currentPage === 'settings' || currentPage === 'planner' || currentPage === 'quran') return;
+            if (!prayerTimings.Fajr) return;
             const now = new Date(); const nS = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
             
-            if (currentPage === 'namaz') {
-                const tFajr = parseSec(prayerTimings.Fajr);
-                const tSunrise = parseSec(prayerTimings.Sunrise);
-                const tDhuhr = parseSec(prayerTimings.Dhuhr);
-                const tAsr = parseSec(prayerTimings.Asr);
-                const tMaghrib = parseSec(prayerTimings.Maghrib);
-                const tIsha = parseSec(prayerTimings.Isha);
-                const nxFajr = parseSec(nextDayTimings.Fajr) + 86400;
+            // Namaz Logic
+            const tFajr = parseSec(prayerTimings.Fajr);
+            const tSunrise = parseSec(prayerTimings.Sunrise);
+            const tDhuhr = parseSec(prayerTimings.Dhuhr);
+            const tAsr = parseSec(prayerTimings.Asr);
+            const tMaghrib = parseSec(prayerTimings.Maghrib);
+            const tIsha = parseSec(prayerTimings.Isha);
+            const nxFajr = parseSec(nextDayTimings.Fajr) + 86400;
 
-                const timeline = [
-                    { s: 0, e: tFajr, type: 'waqt', curr: 'Isha', next: 'Fajr', target: tFajr, progS: parseSec(prayerTimings.Isha) - 86400, progE: tFajr },
-                    { s: tFajr, e: tSunrise, type: 'waqt', curr: 'Fajr', next: 'Dhuhr', target: tSunrise, progS: tFajr, progE: tSunrise },
-                    { s: tSunrise, e: tSunrise + 900, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr }, 
-                    { s: tSunrise + 900, e: tDhuhr - 600, type: 'nowaqt', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr },
-                    { s: tDhuhr - 600, e: tDhuhr, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr }, 
-                    { s: tDhuhr, e: tAsr, type: 'waqt', curr: 'Dhuhr', next: 'Asr', target: tAsr, progS: tDhuhr, progE: tAsr },
-                    { s: tAsr, e: tMaghrib - 600, type: 'waqt', curr: 'Asr', next: 'Maghrib', target: tMaghrib, progS: tAsr, progE: tMaghrib }, 
-                    { s: tMaghrib - 600, e: tMaghrib, type: 'makruh', curr: 'None', next: 'Maghrib', target: tMaghrib, progS: tAsr, progE: tMaghrib }, 
-                    { s: tMaghrib, e: tIsha, type: 'waqt', curr: 'Maghrib', next: 'Isha', target: tIsha, progS: tMaghrib, progE: tIsha },
-                    { s: tIsha, e: 86400, type: 'waqt', curr: 'Isha', next: 'Fajr', target: nxFajr, progS: tIsha, progE: nxFajr }
-                ];
+            const mkSunrise = 900; 
+            const mkZawaal = 600;  
+            const mkSunset = 900;  
 
-                let activeState = timeline.find(st => nS >= st.s && nS < st.e);
-                if (!activeState) activeState = timeline[timeline.length - 1]; 
+            const timeline = [
+                { s: 0, e: tFajr, type: 'waqt', curr: 'Isha', next: 'Fajr', target: tFajr, progS: parseSec(prayerTimings.Isha) - 86400, progE: tFajr },
+                { s: tFajr, e: tSunrise, type: 'waqt', curr: 'Fajr', next: 'Dhuhr', target: tSunrise, progS: tFajr, progE: tSunrise },
+                { s: tSunrise, e: tSunrise + mkSunrise, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tSunrise + mkSunrise, progS: tSunrise, progE: tSunrise + mkSunrise }, 
+                { s: tSunrise + mkSunrise, e: tDhuhr - mkZawaal, type: 'nowaqt', curr: 'None', next: 'Dhuhr', target: tDhuhr - mkZawaal, progS: tSunrise + mkSunrise, progE: tDhuhr - mkZawaal },
+                { s: tDhuhr - mkZawaal, e: tDhuhr, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tDhuhr - mkZawaal, progE: tDhuhr }, 
+                { s: tDhuhr, e: tAsr, type: 'waqt', curr: 'Dhuhr', next: 'Asr', target: tAsr, progS: tDhuhr, progE: tAsr },
+                { s: tAsr, e: tMaghrib - mkSunset, type: 'waqt', curr: 'Asr', next: 'Maghrib', target: tMaghrib - mkSunset, progS: tAsr, progE: tMaghrib - mkSunset }, 
+                { s: tMaghrib - mkSunset, e: tMaghrib, type: 'makruh', curr: 'None', next: 'Maghrib', target: tMaghrib, progS: tMaghrib - mkSunset, progE: tMaghrib }, 
+                { s: tMaghrib, e: tIsha, type: 'waqt', curr: 'Maghrib', next: 'Isha', target: tIsha, progS: tMaghrib, progE: tIsha },
+                { s: tIsha, e: 86400, type: 'waqt', curr: 'Isha', next: 'Fajr', target: nxFajr, progS: tIsha, progE: nxFajr }
+            ];
 
-                let diff = activeState.target - nS;
-                if (diff < 0) diff += 86400;
+            let activeState = timeline.find(st => nS >= st.s && nS < st.e);
+            if (!activeState) activeState = timeline[timeline.length - 1]; 
 
-                let countdownStr = `${String(Math.floor(diff/3600)).padStart(2,'0')}:${String(Math.floor((diff%3600)/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
-                safeSetText('countdown', lang === 'bn' ? toBnNum(countdownStr) : countdownStr);
+            let diff = activeState.target - nS;
+            if (diff < 0) diff += 86400;
+
+            let countdownStr = `${String(Math.floor(diff/3600)).padStart(2,'0')}:${String(Math.floor((diff%3600)/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
+            const displayCd = lang === 'bn' ? toBnNum(countdownStr) : countdownStr;
+            
+            let progTot = activeState.progE - activeState.progS;
+            let progVal = nS - activeState.progS;
+            if (nS < activeState.progS && activeState.progS < 0) {
+                progVal = nS - activeState.progS;
+            } else if (nS < activeState.progS) {
+                progVal = (nS + 86400) - activeState.progS;
+            }
+            let prog = (progTot === 0) ? 0 : (progVal / progTot) * 100;
+
+            const uiSets = [
+                { cd: 'countdown', pb: 'progress-bar', lblCurr: 'lbl-curr-prayer', nameCurr: 'current-prayer-name', lblRem: 'lbl-remaining', glow: '#namaz-glow-circle', nxt: 'next-prayer-name', card: '#page-namaz .glass.group' },
+                { cd: 'dash-countdown', pb: 'dash-progress-bar', lblCurr: 'dash-lbl-curr-prayer', nameCurr: 'dash-current-prayer-name', lblRem: 'dash-lbl-remaining', glow: '#dash-glow-circle', nxt: 'dash-next-prayer-name', card: null }
+            ];
+
+            uiSets.forEach(set => {
+                safeSetText(set.cd, displayCd);
+                const pbEl = document.getElementById(set.pb);
+                if (pbEl) pbEl.style.width = `${Math.min(100, Math.max(0, prog))}%`;
                 
-                let progTot = activeState.progE - activeState.progS;
-                let progVal = nS - activeState.progS;
-                if (nS < activeState.progS && activeState.progS < 0) {
-                    progVal = nS - activeState.progS;
-                } else if (nS < activeState.progS) {
-                    progVal = (nS + 86400) - activeState.progS;
-                }
-
-                let prog = (progTot === 0) ? 0 : (progVal / progTot) * 100;
-                const pb = document.getElementById('progress-bar');
-                if(pb) pb.style.width = `${Math.min(100, Math.max(0, prog))}%`;
-
-                const dashboardCard = document.querySelector('#page-namaz .glass.group');
-                const glowCircle = dashboardCard ? dashboardCard.querySelector('.absolute') : null;
-                const lblCurr = document.getElementById('lbl-curr-prayer');
-                const nameCurr = document.getElementById('current-prayer-name');
+                const lblCurrEl = document.getElementById(set.lblCurr);
+                const nameCurrEl = document.getElementById(set.nameCurr);
+                let glowEl = set.card ? document.querySelector(set.card)?.querySelector(set.glow) : document.getElementById(set.glow.replace('#',''));
                 
                 if (activeState.type === 'waqt') {
-                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all';
-                    if(lblCurr) { lblCurr.innerText = t('curr_prayer'); lblCurr.className = 'text-emerald-400 font-bold uppercase tracking-widest text-xs'; }
-                    if(nameCurr) { nameCurr.innerText = t(activeState.curr); nameCurr.className = 'text-6xl font-black mt-2 glow-green text-white'; }
-                    safeSetText('lbl-remaining', t('waqt_ends_in'));
-                    if(pb) pb.className = 'h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000';
+                    if(glowEl) glowEl.className = 'absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all';
+                    if(lblCurrEl) { lblCurrEl.innerText = t('curr_prayer'); lblCurrEl.className = 'text-emerald-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurrEl) { nameCurrEl.innerText = t(activeState.curr); nameCurrEl.className = 'text-5xl md:text-6xl font-black mt-2 glow-green text-white'; }
+                    safeSetText(set.lblRem, t('waqt_ends_in'));
+                    if(pbEl) pbEl.className = 'h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000';
                 } else if (activeState.type === 'makruh') {
-                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all';
-                    if(lblCurr) { lblCurr.innerText = t('alert'); lblCurr.className = 'text-red-400 font-bold uppercase tracking-widest text-xs'; }
-                    if(nameCurr) { nameCurr.innerText = t('forbidden_time'); nameCurr.className = 'text-4xl sm:text-5xl font-black mt-2 text-red-400'; }
-                    safeSetText('lbl-remaining', t('next_prayer_in'));
-                    if(pb) pb.className = 'h-full bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-1000';
+                    if(glowEl) glowEl.className = 'absolute -top-10 -right-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all';
+                    if(lblCurrEl) { lblCurrEl.innerText = t('alert'); lblCurrEl.className = 'text-red-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurrEl) { nameCurrEl.innerText = t('forbidden_time'); nameCurrEl.className = 'text-3xl md:text-5xl font-black mt-2 text-red-400'; }
+                    safeSetText(set.lblRem, t('makruh_ends_in'));
+                    if(pbEl) pbEl.className = 'h-full bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-1000';
                 } else if (activeState.type === 'nowaqt') {
-                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-slate-500/10 rounded-full blur-3xl group-hover:bg-slate-500/20 transition-all';
-                    if(lblCurr) { lblCurr.innerText = t('status'); lblCurr.className = 'text-gray-400 font-bold uppercase tracking-widest text-xs'; }
-                    if(nameCurr) { nameCurr.innerText = t('no_waqt'); nameCurr.className = 'text-4xl sm:text-5xl font-black mt-2 text-gray-300'; }
-                    safeSetText('lbl-remaining', t('next_prayer_in'));
-                    if(pb) pb.className = 'h-full bg-gradient-to-r from-gray-500 to-gray-400 transition-all duration-1000';
+                    if(glowEl) glowEl.className = 'absolute -top-10 -right-10 w-40 h-40 bg-slate-500/10 rounded-full blur-3xl group-hover:bg-slate-500/20 transition-all';
+                    if(lblCurrEl) { lblCurrEl.innerText = t('status'); lblCurrEl.className = 'text-gray-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurrEl) { nameCurrEl.innerText = t('no_waqt'); nameCurrEl.className = 'text-4xl md:text-5xl font-black mt-2 text-gray-300'; }
+                    safeSetText(set.lblRem, t('next_prayer_in'));
+                    if(pbEl) pbEl.className = 'h-full bg-gradient-to-r from-gray-500 to-gray-400 transition-all duration-1000';
                 }
-
-                safeSetText('next-prayer-name', t(activeState.next));
+                safeSetText(set.nxt, t(activeState.next));
+            });
+            
+            if (currentPage === 'namaz') {
                 renderNamazTable(activeState.type === 'waqt' ? activeState.curr : null);
+            }
 
-            } else if (currentPage === 'sawom') {
-                let sS = parseSec(prayerTimings.Fajr), iS = parseSec(prayerTimings.Maghrib), tgt, start, lbl;
-                if (nS < sS) { tgt = sS; start = (parseSec(nextDayTimings.Isha) || 0) - 86400; lbl = t('sehri_left'); }
-                else if (nS < iS) { tgt = iS; start = sS; lbl = t('iftar_left'); }
-                else { tgt = parseSec(nextDayTimings.Fajr) + 86400; start = iS; lbl = t('sehri_left'); }
-                
-                let sawomCdStr = `${String(Math.floor((tgt-nS)/3600)).padStart(2,'0')}:${String(Math.floor(((tgt-nS)%3600)/60)).padStart(2,'0')}:${String((tgt-nS)%60).padStart(2,'0')}`;
-                safeSetText('sawom-countdown', lang === 'bn' ? toBnNum(sawomCdStr) : sawomCdStr);
-                
-                safeSetText('sawom-status-label', lbl);
-                const sp = document.getElementById('sawom-progress');
-                if(sp) sp.style.width = `${((nS-start)/(tgt-start))*100}%`;
-                
-                safeSetText('sehri-time-val', lang === 'bn' ? toBnTime(format12h(prayerTimings.Fajr)) : format12h(prayerTimings.Fajr));
-                safeSetText('iftar-time-val', lang === 'bn' ? toBnTime(format12h(prayerTimings.Maghrib)) : format12h(prayerTimings.Maghrib));
+            // Sawom Logic
+            let sS = parseSec(prayerTimings.Fajr), iS = parseSec(prayerTimings.Maghrib), tgt, start, lbl;
+            if (nS < sS) { tgt = sS; start = (parseSec(nextDayTimings.Isha) || 0) - 86400; lbl = t('sehri_left'); }
+            else if (nS < iS) { tgt = iS; start = sS; lbl = t('iftar_left'); }
+            else { tgt = parseSec(nextDayTimings.Fajr) + 86400; start = iS; lbl = t('sehri_left'); }
+            
+            let sawomCdStr = `${String(Math.floor((tgt-nS)/3600)).padStart(2,'0')}:${String(Math.floor(((tgt-nS)%3600)/60)).padStart(2,'0')}:${String((tgt-nS)%60).padStart(2,'0')}`;
+            const sawomDisplayCd = lang === 'bn' ? toBnNum(sawomCdStr) : sawomCdStr;
+            const sawomProgWidth = `${((nS-start)/(tgt-start))*100}%`;
+            const sTimeStr = formatTimeLocale(prayerTimings.Fajr);
+            const iTimeStr = formatTimeLocale(prayerTimings.Maghrib);
+
+            const sawomSets = [
+                { cd: 'sawom-countdown', pb: 'sawom-progress', lbl: 'sawom-status-label', st: 'sehri-time-val', it: 'iftar-time-val' },
+                { cd: 'dash-sawom-countdown', pb: 'dash-sawom-progress', lbl: 'dash-sawom-status-label', st: 'dash-sehri-time-val', it: 'dash-iftar-time-val' }
+            ];
+
+            sawomSets.forEach(set => {
+                safeSetText(set.cd, sawomDisplayCd);
+                safeSetText(set.lbl, lbl);
+                const spEl = document.getElementById(set.pb);
+                if(spEl) spEl.style.width = sawomProgWidth;
+                safeSetText(set.st, sTimeStr);
+                safeSetText(set.it, iTimeStr);
+            });
+            
+            if (currentPage === 'sawom' || currentPage === 'dashboard') {
                 renderSawomCalendar();
             }
         }
