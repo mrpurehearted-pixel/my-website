@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Namaz & Ramadan Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #0f172a, #020617);
+            color: #f3f4f6;
+            min-height: 100vh;
+            padding-bottom: 140px;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .prayer-row { transition: all 0.3s ease; }
+        
+        .prayer-row.active {
+            background: #113324;
+            border-left: 4px solid #10b981;
+        }
+
+        .nav-item.active { color: #10b981; }
+        .nav-item.active i { transform: translateY(-4px); color: #10b981; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        
+        .page { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .check-btn { transition: all 0.2s; }
+        .check-btn.checked { background: #10b981; color: white; border-color: #10b981; }
+        .rakat-card { border-top: 4px solid #10b981; }
+        
+        .lang-btn { padding: 10px 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; cursor: pointer; }
+        .lang-btn.active { background: #10b981; color: white; border-color: #10b981; }
+
+        select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            width: 100%;
+            outline: none;
+        }
+
+        .arabic-text { font-family: 'Amiri', serif; }
+        
+        .ayah-card { 
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255,255,255,0.03); 
+            position: relative; 
+            overflow: hidden; 
+            border-radius: 1rem;
+        }
+        .ayah-card.playing { 
+            border-color: rgba(16, 185, 129, 0.4); 
+            background: rgba(16, 185, 129, 0.05); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+        }
+        
+        .ayah-progress { 
+            height: 3px; 
+            position: absolute; 
+            bottom: 0; 
+            right: 0; 
+            left: auto;
+            width: 0%; 
+            background: linear-gradient(to left, #10b981, #34d399); 
+            box-shadow: 0 -2px 10px rgba(16, 185, 129, 0.5);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto relative">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-gradient" id="header-location">সনাক্ত করা হচ্ছে...</h1>
+                <p class="text-gray-400 text-sm mt-1" id="header-sync">সিঙ্ক হচ্ছে...</p>
+            </div>
+            <div class="text-right glass px-6 py-3 rounded-2xl min-w-[220px]">
+                <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1" id="top-ar-date">লোড হচ্ছে...</div>
+                <div class="text-xs text-emerald-400 font-medium mb-1" id="top-bn-date">লোড হচ্ছে...</div>
+                <div class="text-lg font-semibold" id="top-en-date">-- -- ----</div>
+            </div>
+        </header>
+
+        <div id="page-namaz" class="page active">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 flex flex-col gap-6">
+                    <div class="glass rounded-3xl p-8 relative overflow-hidden group">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <span class="text-emerald-400 font-bold uppercase tracking-widest text-xs" id="lbl-curr-prayer">বর্তমান নামাজ</span>
+                                <h2 class="text-6xl font-black mt-2 glow-green text-white" id="current-prayer-name">...</h2>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-gray-400 text-xs font-medium uppercase tracking-widest">
+                                    <span id="lbl-next-prayer">পরবর্তী</span>: <span id="next-prayer-name" class="text-gray-200">...</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mb-8">
+                            <div class="text-gray-400 text-sm mb-2" id="lbl-remaining">বাকি সময়</div>
+                            <div class="text-7xl font-mono font-bold tracking-tighter" id="countdown">00:00:00</div>
+                        </div>
+                        <div class="w-full bg-gray-800/50 h-2 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div class="glass rounded-2xl p-4 text-center">
+                            <i class="fa-solid fa-moon text-indigo-400 mb-2"></i>
+                            <div class="text-xs text-gray-400 uppercase" id="lbl-hijri">হিজরি</div>
+                            <div class="font-bold text-sm" id="hijri-date">-- --</div>
+                        </div>
+                        <div class="glass rounded-2xl p-4 text-center">
+                            <i class="fa-solid fa-earth-asia text-emerald-400 mb-2"></i>
+                            <div class="text-xs text-gray-400 uppercase" id="lbl-region">অঞ্চল</div>
+                            <div class="font-bold text-sm" id="val-region">ঢাকা ও পার্শ্ববর্তী</div>
+                        </div>
+                        <div class="glass rounded-2xl p-4 text-center col-span-2 sm:col-span-1">
+                            <i class="fa-solid fa-clock text-orange-400 mb-2"></i>
+                            <div class="text-xs text-gray-400 uppercase" id="lbl-sunrise">সূর্যোদয়</div>
+                            <div class="font-bold text-sm" id="sunrise-time">--:--</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-5">
+                    <div class="glass rounded-3xl p-6 h-full">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-emerald-500"></i>
+                            <span id="lbl-daily-schedule">আজকের সময়সূচী</span>
+                        </h3>
+                        <div class="space-y-3" id="salah-table"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-quran" class="page">
+            <div id="surah-list-view" class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h3 class="text-2xl font-bold text-gradient" id="lbl-quran-title">আল কুরআন</h3>
+                    <div class="glass px-4 py-2 rounded-xl flex items-center gap-3 w-full md:w-64">
+                        <i class="fa-solid fa-magnifying-glass text-gray-500 text-sm"></i>
+                        <input type="text" id="surah-search" placeholder="সূরা খুঁজুন..." class="bg-transparent border-none outline-none text-sm w-full" onkeyup="filterSurahs()">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="surah-container">
+                    <div class="col-span-full py-20 text-center opacity-50" id="quran-loader">
+                        <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4"></i>
+                        <p data-lang="surah_list_loading">সূরা তালিকা লোড হচ্ছে...</p>
+                    </div>
+                </div>
+            </div>
+            <div id="ayah-reading-view" class="hidden space-y-6 pb-24">
+                <button onclick="backToSurahList()" class="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> <span id="lbl-back">তালিকায় ফিরুন</span>
+                </button>
+                
+                <div class="glass rounded-3xl p-6 md:p-8 relative">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-gray-700/50 pb-6 gap-6">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white" id="active-surah-name" data-lang="surah_name">Surah Name</h2>
+                            <p class="text-gray-400 text-sm mt-1" id="active-surah-info" data-lang="loading">Loading...</p>
+                        </div>
+                        <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                            <button id="btn-main-play" onclick="toggleFullSurahPlay()" class="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] shrink-0">
+                                <i id="icon-main-play" class="fa-solid fa-play text-white text-xl ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="bismillah-container"></div>
+                    <div id="ayahs-container" class="space-y-5"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-sawom" class="page">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <div class="glass rounded-3xl p-8 overflow-hidden relative">
+                        <div class="flex flex-col sm:flex-row justify-between gap-6">
+                            <div class="flex-1">
+                                <span id="sawom-status-label" class="text-orange-400 font-bold uppercase tracking-widest text-xs">সাহরির জন্য অপেক্ষা</span>
+                                <div class="text-6xl font-black mt-2 mb-4" id="sawom-countdown">00:00:00</div>
+                                <div class="w-full bg-gray-800/50 h-3 rounded-full overflow-hidden mb-2">
+                                    <div id="sawom-progress" class="h-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-400 font-mono">
+                                    <span><span data-lang="sehri_ends">Sahri End</span>: <span id="sawom-start-time">--:--</span></span>
+                                    <span><span data-lang="iftar_starts">Iftar Start</span>: <span id="sawom-end-time">--:--</span></span>
+                                </div>
+                            </div>
+                            <div class="sm:w-1/3 flex flex-col gap-4">
+                                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center">
+                                    <div class="text-[10px] text-emerald-400 uppercase tracking-tighter mb-1" id="lbl-sehri-ends">সাহরি শেষ</div>
+                                    <div class="text-xl font-bold" id="sehri-time-val">--:--</div>
+                                </div>
+                                <div class="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 text-center">
+                                    <div class="text-[10px] text-orange-400 uppercase tracking-tighter mb-1" id="lbl-iftar-starts">ইফতার শুরু</div>
+                                    <div class="text-xl font-bold" id="iftar-time-val">--:--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass rounded-3xl p-6 border-l-4 border-emerald-500">
+                            <h4 class="text-emerald-400 font-bold text-sm mb-4 uppercase tracking-wider" id="lbl-sehri-dua">সাহরির দোয়া</h4>
+                            <p class="text-2xl text-right arabic-text mb-4" dir="rtl">نَوَيْتُ أَنْ أَصُومَ غَدًا مِنْ شَهْرِ رَمَضَانَ الْمُبَارَكِ فَرْضًا لَكَ يَا اللهُ فَتَقَبَّلْ مِنِّي إِنَّكَ أَنْتَ السَّمِيْعُ الْعَلِيْمُ</p>
+                            <div class="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
+                                <span class="text-xs font-bold text-emerald-400 block mb-1">উচ্চারণ:</span>
+                                <p class="text-sm text-gray-300 leading-relaxed">নাওয়াইতু আন আসুমা গাদাম মিন শাহরি রমাদ্বানাল মুবারাকি ফারদ্বাল্লাকা ইয়া আল্লাহু ফাতাকাব্বাল মিন্নি ইন্নাকা আংতাস সামিউল আলিম।</p>
+                            </div>
+                        </div>
+                        <div class="glass rounded-3xl p-6 border-l-4 border-orange-500">
+                            <h4 class="text-orange-400 font-bold text-sm mb-4 uppercase tracking-wider" id="lbl-iftar-dua">ইফতারের দোয়া</h4>
+                            <p class="text-2xl text-right arabic-text mb-4" dir="rtl">اَللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ اَفْطَرْتُ</p>
+                            <div class="bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl">
+                                <span class="text-xs font-bold text-orange-400 block mb-1">উচ্চারণ:</span>
+                                <p class="text-sm text-gray-300 leading-relaxed">আল্লাহুম্মা লাকা সুমতু ওয়া আলা রিযক্বিকা আফতারতু।</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-4">
+                    <div class="glass rounded-3xl p-6 h-full flex flex-col relative">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2" id="lbl-sawom-cal">রমাদান ক্যালেন্ডার</h3>
+                        <div id="fasting-calendar" class="space-y-3 flex-1 overflow-y-auto max-h-[400px]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-planner" class="page">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h3 class="text-2xl font-bold text-gradient text-center md:text-left" id="lbl-planner-title">তাকওয়া অর্জনে রমাদান প্ল্যানার</h3>
+                <div class="flex items-center gap-3 glass p-2 rounded-2xl">
+                    <button onclick="changePlannerDay(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-xl hover:bg-emerald-500/20"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="text-center min-w-[120px]">
+                        <div class="text-[10px] text-emerald-400 uppercase font-bold" id="lbl-ramadan-day">Ramadan Day</div>
+                        <div class="text-xl font-bold" id="planner-day-display">01</div>
+                    </div>
+                    <button onclick="changePlannerDay(1)" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-xl hover:bg-emerald-500/20"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                    <div class="glass rounded-3xl p-6 bg-emerald-500/5 border-emerald-500/20 flex justify-between items-center">
+                        <div><h4 class="font-bold text-emerald-400" id="lbl-score-today">আজকের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" id="lbl-pts-today">Points Today</div></div>
+                        <div class="text-5xl font-black text-white" id="today-score">0</div>
+                    </div>
+                    <div class="glass rounded-3xl p-6 bg-indigo-500/5 border-indigo-500/20 flex justify-between items-center">
+                        <div><h4 class="font-bold text-indigo-400" id="lbl-score-total">পুরো রমাদানের অর্জন</h4><div class="text-xs text-gray-400 uppercase tracking-widest" id="lbl-pts-total">Total Progress Score</div></div>
+                        <div class="text-5xl font-black text-white" id="total-score">0</div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="glass rounded-3xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-emerald-400" id="lbl-daily-tasks">দৈনিক করণীয়সমূহ</h4>
+                            <div class="text-xs bg-emerald-500/20 px-3 py-1 rounded-full" id="lbl-pts-rule">প্রতিটি ১ পয়েন্ট</div>
+                        </div>
+                        <div class="space-y-3" id="daily-tasks-list"></div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="glass rounded-3xl p-6 border-l-4 border-orange-500">
+                        <div class="mb-4">
+                            <h4 class="font-bold text-orange-400" id="phase-title">১০ দিনের ব্লক আমল</h4>
+                            <div class="text-[10px] text-gray-400 uppercase mt-1" id="lbl-phase-rule">১০ দিনে অন্তত একবার (১ পয়েন্ট)</div>
+                        </div>
+                        <div class="space-y-3" id="ten-day-tasks-list"></div>
+                    </div>
+                    <div class="glass rounded-3xl p-6 border-l-4 border-emerald-500">
+                        <div class="mb-4">
+                            <h4 class="font-bold text-emerald-400" id="lbl-imp-tasks">অত্যন্ত গুরুত্বপূর্ণ আমল</h4>
+                            <div class="text-[10px] text-gray-400 uppercase mt-1" id="lbl-imp-rule">প্রতিটি ৫ পয়েন্ট</div>
+                        </div>
+                        <div class="space-y-3" id="important-tasks-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-rakat" class="page">
+            <h3 class="text-2xl font-bold mb-8 text-center text-gradient" id="lbl-rakat-title">নামাজের রাকাত সমুহ</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="rakat-container"></div>
+        </div>
+
+        <div id="page-settings" class="page">
+            <h3 class="text-2xl font-bold mb-8 text-center text-gradient" id="lbl-settings-title">Settings / সেটিংস</h3>
+            <div class="max-w-md mx-auto space-y-6">
+                <div class="glass rounded-3xl p-6">
+                    <h4 class="font-bold text-emerald-400 mb-4" id="lbl-set-lang">Language / ভাষা</h4>
+                    <div class="flex gap-4">
+                        <button onclick="setLanguage('en')" id="btn-lang-en" class="lang-btn flex-1 flex flex-col items-center">
+                            <span class="font-bold">English</span>
+                        </button>
+                        <button onclick="setLanguage('bn')" id="btn-lang-bn" class="lang-btn flex-1 flex flex-col items-center">
+                            <span class="font-bold">বাংলা</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="glass rounded-3xl p-6">
+                    <h4 class="font-bold text-emerald-400 mb-4" id="lbl-set-loc">Location / স্থান</h4>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <button onclick="setLocationMode('auto')" id="btn-loc-auto" class="lang-btn flex-1 flex flex-col items-center">
+                                <span class="font-bold text-xs" id="lbl-loc-auto">Automatic</span>
+                            </button>
+                            <button onclick="setLocationMode('manual')" id="btn-loc-manual" class="lang-btn flex-1 flex flex-col items-center">
+                                <span class="font-bold text-xs" id="lbl-loc-manual">Manual</span>
+                            </button>
+                        </div>
+                        <div id="manual-loc-select" class="hidden">
+                            <label class="text-[10px] text-gray-400 uppercase mb-2 block" id="lbl-select-dist">Select District</label>
+                            <select id="dist-select" onchange="updateManualDistrict()">
+                                <option value="dhaka">Dhaka / ঢাকা</option>
+                                <option value="chittagong">Chittagong / চট্টগ্রাম</option>
+                                <option value="sylhet">Sylhet / সিলেট</option>
+                                <option value="rajshahi">Rajshahi / রাজশাহী</option>
+                                <option value="khulna">Khulna / খুলনা</option>
+                                <option value="barisal">Barisal / বরিশাল</option>
+                                <option value="rangpur">Rangpur / রংপুর</option>
+                                <option value="mymensingh">Mymensingh / ময়মনসিংহ</option>
+                                <option value="comilla">Comilla / কুমিল্লা</option>
+                                <option value="gazipur">Gazipur / গাজীপুর</option>
+                                <option value="narayanganj">Narayanganj / নারায়ণগঞ্জ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 mb-8 text-center px-4">
+            <div class="glass inline-block px-6 py-3 rounded-2xl border border-white/5">
+                <p class="text-[11px] text-gray-400 uppercase tracking-[0.2em]"><span data-lang="dev_by">Developed by</span> <span class="text-emerald-400 font-bold" style="text-transform: none;">Md. Ariful Islam Khan</span></p>
+                <p class="text-[10px] text-gray-500 mt-1 italic opacity-80" data-lang="grace">By the grace of Almighty Allah</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Floating Quran Player -->
+    <div id="quran-floating-player" class="fixed bottom-[90px] left-1/2 -translate-x-1/2 w-[95vw] max-w-lg glass rounded-2xl px-4 py-3 flex justify-between items-center z-[60] transition-all duration-500 translate-y-[150%] opacity-0 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+        <div class="flex items-center gap-3 overflow-hidden cursor-pointer" onclick="restoreSurahView()">
+            <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 shadow-inner">
+                <i class="fa-solid fa-book-open text-emerald-400"></i>
+            </div>
+            <div class="flex flex-col min-w-0">
+                <span id="floating-surah-name" class="text-sm font-bold text-white truncate hover:text-emerald-400 transition-colors">Surah</span>
+                <span id="floating-ayah-info" class="text-[10px] text-emerald-400 uppercase tracking-widest truncate">Ayah</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 pl-2">
+            <button onclick="toggleFloatingPlay()" class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-400 transition-all shadow-md">
+                <i id="floating-play-icon" class="fa-solid fa-pause"></i>
+            </button>
+            <button onclick="stopPlayback()" class="w-10 h-10 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Full Ramadan Calendar Modal -->
+    <div id="full-calendar-modal" class="fixed inset-0 z-[100] bg-black/80 hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="glass rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden border border-white/10 shadow-2xl transform scale-95 transition-transform duration-300" id="full-calendar-content-box">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
+                <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-check"></i> <span data-lang="full_ramadan_cal">Ramadan Calendar 2026</span>
+                </h3>
+                <button onclick="closeFullRamadanCalendar()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 bg-slate-900/20 space-y-2" id="full-calendar-list">
+                <!-- Content populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 glass rounded-full px-4 py-4 flex gap-4 md:gap-8 items-center z-50 overflow-x-auto max-w-[95vw]">
+        <button onclick="switchPage('namaz')" id="nav-namaz" class="nav-item active flex flex-col items-center gap-1 transition-all flex-shrink-0">
+            <i class="fa-solid fa-mosque text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="namaz">নামাজ</span>
+        </button>
+        <button onclick="switchPage('quran')" id="nav-quran" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-book-quran text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="quran">কুরআন</span>
+        </button>
+        <button onclick="switchPage('sawom')" id="nav-sawom" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-moon text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="sawom">সাওম</span>
+        </button>
+        <button onclick="switchPage('planner')" id="nav-planner" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-calendar-check text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="planner">প্ল্যানার</span>
+        </button>
+        <button onclick="switchPage('rakat')" id="nav-rakat" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-list-ol text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="rakat">রাকাত</span>
+        </button>
+        <button onclick="switchPage('settings')" id="nav-settings" class="nav-item flex flex-col items-center gap-1 transition-all text-gray-500 flex-shrink-0">
+            <i class="fa-solid fa-gear text-lg md:text-xl"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tight" data-lang="settings">সেটিংস</span>
+        </button>
+    </nav>
+
+    <script>
+        /**
+         * 1. Global State & Constant Data
+         */
+        var lang = localStorage.getItem('app_lang') || 'bn';
+        var locMode = localStorage.getItem('loc_mode') || 'auto';
+        var manualDist = localStorage.getItem('manual_dist') || 'dhaka';
+        var currentPage = 'namaz';
+        var plannerDay = 1;
+        var currentRamadanDay = 1;
+        var prayerTimings = {};
+        var nextDayTimings = {};
+        var scheduleData = [];
+        var allSurahs = [];
+        
+        // Single robust Audio Controller variables
+        const globalAudio = new Audio();
+        let audioQueue = [];
+        let currentQueueIndex = 0;
+        let currentSurahData = null; 
+        let quranPlayer = {
+            mode: 'none',   
+            surahNum: 0,
+            isPlaying: false,
+            animFrame: null
+        };
+
+        var prayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        var prayerIcons = { 'Fajr': 'fa-cloud-sun', 'Dhuhr': 'fa-sun', 'Asr': 'fa-mountain-sun', 'Maghrib': 'fa-cloud-moon', 'Isha': 'fa-moon' };
+        const oddNights = [21, 23, 25, 27, 29];
+
+        // 114 Surah Names in Bengali
+        const surahNamesBn = [
+            "আল ফাতিহা", "আল বাকারা", "আলে ইমরান", "আন নিসা", "আল মায়িদাহ", "আল আন'আম", "আল আ'রাফ", "আল আনফাল", "আত তওবা", "ইউনুস",
+            "হুদ", "ইউসুফ", "আর রাদ", "ইব্রাহীম", "আল হিজর", "আন নাহল", "বনী ইসরাঈল", "আল কাহফ", "মারইয়াম", "ত্বোয়া-হা",
+            "আল আম্বিয়া", "আল হাজ্জ", "আল মু'মিনুন", "আন নূর", "আল ফুরকান", "আশ শুআরা", "আন নমল", "আল কাসাস", "আল আনকাবুত", "আর রুম",
+            "লোকমান", "আস সেজদাহ", "আল আহযাব", "সাবা", "ফাতির", "ইয়াসীন", "আস ছাফফাত", "সোয়াদ", "আয যুমার", "আল মু'মিন",
+            "হা-মীম সেজদাহ", "আশ শূরা", "আয যুখরুফ", "আদ দোখান", "আল জাসিয়াহ", "আল আহকাফ", "মুহাম্মদ", "আল ফাতহ", "আল হুজুরাত", "ক্বাফ",
+            "আয যারিয়াত", "আত তূর", "আন নাজম", "আল কামার", "আর রহমান", "আল ওয়াকিয়াহ", "আল হাদীদ", "আল মুজাদালাহ", "আল হাশর", "আল মুমতাহিনাহ",
+            "আস ছফ", "আল জুমুআহ", "আল মুনাফিকুন", "আত তাগাবুন", "আত তালাক", "আত তাহরীম", "আল মুলক", "আল কলম", "আল হাক্কাহ", "আল মা'আরিজ",
+            "নূহ", "আল জিন", "আল মুযযাম্মিল", "আল মুদ্দাসসির", "আল কিয়ামাহ", "আদ দাহর", "আল মুরসালাত", "আন নাবা", "আন নাযিয়াত", "আবাসা",
+            "আত তাকভীর", "আল ইনফিতার", "আত মুতাফফিফীন", "আল ইনশিকাক", "আল বুরুজ", "আত তারিক", "আল আ'লা", "আল গাশিয়াহ", "আল ফজর", "আল বালাদ",
+            "আশ শামস", "আল লাইল", "আদ দুহা", "আল ইনশিরাহ", "আত তীন", "আল আলাক", "আল কদর", "আল বাইয়্যিনাহ", "আয যিলযাল", "আল আদিয়াত",
+            "আল কারিয়াহ", "আত তাকাসুর", "আল আসর", "আল হুমাযাহ", "আল ফীল", "কুরাইশ", "আল মাউন", "আল কাউসার", "আল কাফিরুন", "আন নাসর",
+            "আল লাহাব", "আল ইখলাস", "আল ফালাক", "আন নাস"
+        ];
+
+        const plannerDailyTasks_EN = ["Tahajjud?", "Fast?", "Fajr Jamat?", "Recite Yasin?", "No Quarrel?", "No Backbiting?", "Zuhr Jamat?", "Read Quran?", "Asr Jamat?", "Durood 100x?", "Istighfar 100x?", "Maghrib Jamat?", "Isha Jamat?", "Full Tarawih?", "Serve Parents?"];
+        const plannerDailyTasks_BN = ["তাহাজ্জুদ পড়েছি?", "রোযা রেখেছি?", "ফজর জামাতে?", "সূরা ইয়াসীন পড়েছি?", "বিবাদ করিনি?", "গীবত করিনি?", "যোহর জামাতে?", "কুরআন পড়েছি?", "আসর জামাতে?", "দরুদ ১০০ বার?", "ইস্তিগফার ১০০ বার?", "মাগরিব জামাতে?", "এশা জামাতে?", "পূর্ণ তারাবীহ?", "বাবা-মায়ের সেবা?"];
+
+        const rakatData = [
+            { id: 'fajr', total: 4, breakdown: [{ l: 'sun_muak', v: 2 }, { l: 'fard', v: 2 }] },
+            { id: 'zuhr', total: 12, breakdown: [{ l: 'sun_muak', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }] },
+            { id: 'asr', total: 8, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }] },
+            { id: 'maghrib', total: 7, breakdown: [{ l: 'fard', v: 3 }, { l: 'sun_muak', v: 2 }, { l: 'nafl', v: 2 }] },
+            { id: 'isha', total: 15, breakdown: [{ l: 'sun_ghay', v: 4 }, { l: 'fard', v: 4 }, { l: 'sun_muak', v: 2 }, { l: 'witr', v: 3 }, { l: 'nafl', v: 2 }] }
+        ];
+
+        var userData = JSON.parse(localStorage.getItem('ramadan_planner_data_v5')) || { 
+            daily: {}, phase: {}, phase_attr: {}, important: {}, important_attr: {}, oddNights: {}, oddNights_attr: {} 
+        };
+
+        const districtCoords = {
+            dhaka: { lat: 23.81, lon: 90.41, name: { en: "Dhaka", bn: "ঢাকা" } },
+            chittagong: { lat: 22.35, lon: 91.78, name: { en: "Chittagong", bn: "চট্টগ্রাম" } },
+            sylhet: { lat: 24.89, lon: 91.87, name: { en: "Sylhet", bn: "সিলেট" } },
+            rajshahi: { lat: 24.37, lon: 88.60, name: { en: "Rajshahi", bn: "রাজশাহী" } },
+            khulna: { lat: 22.84, lon: 89.54, name: { en: "Khulna", bn: "খুলনা" } },
+            barisal: { lat: 22.70, lon: 90.35, name: { en: "Barisal", bn: "বরিশাল" } },
+            rangpur: { lat: 25.74, lon: 89.27, name: { en: "Rangpur", bn: "রংপুর" } },
+            mymensingh: { lat: 24.74, lon: 90.40, name: { en: "Mymensingh", bn: "ময়মনসিংহ" } },
+            comilla: { lat: 23.46, lon: 91.17, name: { en: "Comilla", bn: "কুমিল্লা" } },
+            gazipur: { lat: 23.98, lon: 90.41, name: { en: "Gazipur", bn: "গাজীপুর" } },
+            narayanganj: { lat: 23.62, lon: 90.50, name: { en: "Narayanganj", bn: "নারায়ণগঞ্জ" } }
+        };
+
+        const ramadan2026Data = {
+            "19 Feb 2026": { sehri: "05:12", iftar: "17:58", ramadan: 1 }, "20 Feb 2026": { sehri: "05:11", iftar: "17:58", ramadan: 2 }, "21 Feb 2026": { sehri: "05:11", iftar: "17:59", ramadan: 3 }, "22 Feb 2026": { sehri: "05:10", iftar: "17:59", ramadan: 4 }, "23 Feb 2026": { sehri: "05:09", iftar: "18:00", ramadan: 5 }, "24 Feb 2026": { sehri: "05:08", iftar: "18:00", ramadan: 6 }, "25 Feb 2026": { sehri: "05:08", iftar: "18:01", ramadan: 7 }, "26 Feb 2026": { sehri: "05:07", iftar: "18:01", ramadan: 8 }, "27 Feb 2026": { sehri: "05:06", iftar: "18:02", ramadan: 9 }, "28 Feb 2026": { sehri: "05:05", iftar: "18:02", ramadan: 10 }, "01 Mar 2026": { sehri: "05:05", iftar: "18:03", ramadan: 11 }, "02 Mar 2026": { sehri: "05:04", iftar: "18:03", ramadan: 12 }, "03 Mar 2026": { sehri: "05:03", iftar: "18:04", ramadan: 13 }, "04 Mar 2026": { sehri: "05:02", iftar: "18:04", ramadan: 14 }, "05 Mar 2026": { sehri: "05:01", iftar: "18:05", ramadan: 15 }, "06 Mar 2026": { sehri: "05:00", iftar: "18:05", ramadan: 16 }, "07 Mar 2026": { sehri: "04:59", iftar: "18:06", ramadan: 17 }, "08 Mar 2026": { sehri: "04:58", iftar: "18:06", ramadan: 18 }, "09 Mar 2026": { sehri: "04:57", iftar: "18:07", ramadan: 19 }, "10 Mar 2026": { sehri: "04:57", iftar: "18:07", ramadan: 20 }, "11 Mar 2026": { sehri: "04:56", iftar: "18:07", ramadan: 21 }, "12 Mar 2026": { sehri: "04:55", iftar: "18:08", ramadan: 22 }, "13 Mar 2026": { sehri: "04:54", iftar: "18:08", ramadan: 23 }, "14 Mar 2026": { sehri: "04:53", iftar: "18:09", ramadan: 24 }, "15 Mar 2026": { sehri: "04:52", iftar: "18:09", ramadan: 25 }, "16 Mar 2026": { sehri: "04:51", iftar: "18:10", ramadan: 26 }, "17 Mar 2026": { sehri: "04:50", iftar: "18:10", ramadan: 27 }, "18 Mar 2026": { sehri: "04:49", iftar: "18:10", ramadan: 28 }, "19 Mar 2026": { sehri: "04:48", iftar: "18:11", ramadan: 29 }, "20 Mar 2026": { sehri: "04:47", iftar: "18:11", ramadan: 30 }
+        };
+
+        const translations = {
+            en: {
+                namaz: "Namaz", quran: "Quran", sawom: "Sawom", planner: "Planner", rakat: "Rakat", settings: "Settings",
+                locating: "Locating...", syncing: "Syncing...", synced: "Synced with IFB Calendar",
+                curr_prayer: "Current Prayer", next_prayer: "Next", remaining: "Remaining",
+                waqt_ends_in: "Waqt Ends In", next_prayer_in: "Next Prayer In",
+                forbidden_time: "Forbidden Time", no_waqt: "No Waqt",
+                status: "Status", alert: "Alert",
+                hijri: "Hijri", region: "Region", region_val: "Dhaka & Surrounding", sunrise: "Sunrise",
+                daily_schedule: "Today's Schedule", sehri_wait: "Waiting for Sehri", sehri_left: "Time left for Sehri",
+                iftar_left: "Time left for Iftar", sehri_ends: "Sahri End", iftar_starts: "Iftar",
+                sehri_dua: "Sehri Dua", iftar_dua: "Iftar Dua", sawom_cal: "Ramadan Calendar",
+                planner_title: "Ramadan Taqwa Planner", ramadan_day: "Ramadan Day",
+                score_today: "Today's Achievement", pts_today: "Points Today",
+                score_total: "Total Achievement", pts_total: "Total Progress Score",
+                daily_tasks: "Daily Tasks", pts_rule: "1 point each",
+                phase_rule: "At least once in 10 days (1 pt)", imp_tasks: "Very Important Tasks", imp_rule: "5 points each",
+                rakat_title: "Prayer Rakats", settings_title: "App Settings", set_lang: "Language", set_loc: "Location",
+                loc_auto: "Automatic", loc_manual: "Manual", select_dist: "Select District",
+                odd_night_title: "Worship in odd nights of last 10 days?",
+                odd_night_sub: "1 point per night", note_rakat: "Note: Fard and Sunnah Mu'akkadah must be performed. Nafl and Ghayre Mu'akkadah are optional.",
+                total_rakat: "Total Rakats", fard: "Fard", sun_muak: "Sunnah Mu'akkadah", sun_ghay: "Sunnah Ghayre Mu'akkadah", nafl: "Nafl", witr: "Witr",
+                fajr: "Fajr", zuhr: "Zuhr", dhuhr: "Dhuhr", asr: "Asr", maghrib: "Maghrib", isha: "Isha",
+                today: "Today", tomorrow: "Tomorrow", arabic_date: "Hijri", rakat_unit: "Rakat",
+                banglabda: "Bangabda", quran_title: "Al Quran", back: "Back to List", ends: "Ends",
+                search_surah: "Search Surah...", surah_list_loading: "Loading Surah List...", surah_name: "Surah Name",
+                loading: "Loading...", dev_by: "Developed by", grace: "By the grace of Almighty Allah",
+                meccan: "Meccan", medinan: "Medinan", ayahs: "Ayahs", pronun: "EN",
+                bismillah_ar_en: "Bismillaahir Rahmaanir Raheem", bismillah_bn_en: "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
+                view_full_calendar: "View Full Calendar", full_ramadan_cal: "Ramadan Calendar 2026", ramadan: "Ramadan"
+            },
+            bn: {
+                namaz: "নামাজ", quran: "কুরআন", sawom: "সাওম", planner: "প্ল্যানার", rakat: "রাকাত", settings: "সেটিংস",
+                locating: "স্থান শনাক্ত করা হচ্ছে...", syncing: "সিঙ্ক হচ্ছে...", synced: "IFB ক্যালেন্ডারের সাথে যুক্ত",
+                curr_prayer: "বর্তমান নামাজ", next_prayer: "পরবর্তী", remaining: "বাকি সময়",
+                waqt_ends_in: "ওয়াক্ত শেষ হতে বাকি", next_prayer_in: "পরবর্তী নামাজ আসতে বাকি",
+                forbidden_time: "নামাজ নিষিদ্ধ সময়", no_waqt: "ওয়াক্ত নেই",
+                status: "বর্তমান অবস্থা", alert: "সতর্কতা",
+                hijri: "হিজরি", region: "অঞ্চল", region_val: "ঢাকা ও পার্শ্ববর্তী", sunrise: "সূর্যোদয়",
+                daily_schedule: "আজকের সময়সূচী", sehri_wait: "সাহরির জন্য অপেক্ষা", sehri_left: "সাহরির জন্য সময় বাকি",
+                iftar_left: "ইফতারের জন্য সময় বাকি", sehri_ends: "সাহরি শেষ", iftar_starts: "ইফতার শুরু",
+                sehri_dua: "সাহরির দোয়া", iftar_dua: "ইফতারের দোয়া", sawom_cal: "রমাদান ক্যালেন্ডার",
+                planner_title: "তাকওয়া অর্জনে রমাদান প্ল্যানার", ramadan_day: "রমাদানের দিন",
+                score_today: "আজকের অর্জন", pts_today: "আজকের পয়েন্ট",
+                score_total: "পুরো রমাদানের অর্জন", pts_total: "সর্বমোট পয়েন্ট",
+                daily_tasks: "দৈনিক করণীয়সমূহ", pts_rule: "প্রতিটি ১ পয়েন্ট",
+                phase_rule: "১০ দিনে অন্তত একবার (১ পয়েন্ট)", imp_tasks: "অত্যন্ত গুরুত্বপূর্ণ আমল", imp_rule: "প্রতিটি ৫ পয়েন্ট",
+                rakat_title: "নামাজের রাকাত সমুহ", settings_title: "অ্যাপ সেটিংস", set_lang: "ভাষা", set_loc: "স্থান",
+                loc_auto: "স্বয়ংক্রিয়", loc_manual: "ম্যানুয়াল", select_dist: "জেলা নির্বাচন করুন",
+                odd_night_title: "শেষ দশকের বিজোড় রাতগুলোতে সুন্নাহ অনুযায়ী ইবাদত?",
+                odd_night_sub: "প্রতি রাতে ১ পয়েন্ট", note_rakat: "দ্রষ্টব্য: ফরজ ও সুন্নাতে মুয়াক্কাদা নামাজগুলো গুরুত্বের সাথে পড়তে হবে। নফল ও সুন্নাতে গায়রে মুয়াক্কাদা না পড়লে গুনাহ হবে না।",
+                total_rakat: "মোট রাকাত", fard: "ফরজ", sun_muak: "সুন্নাতে মুয়াক্কাদা", sun_ghay: "সুন্নাতে গায়রে মুয়াক্কাদা", nafl: "নফল", witr: "বিতর",
+                fajr: "ফজর", zuhr: "যোহর", dhuhr: "যোহর", asr: "আসর", maghrib: "মাগরিব", isha: "এশা",
+                today: "আজ", tomorrow: "আগামীকাল", arabic_date: "হিজরি", rakat_unit: "রাকাত",
+                banglabda: "বঙ্গাব্দ", quran_title: "আল কুরআন", back: "তালিকায় ফিরুন", ends: "শেষ",
+                search_surah: "সূরা খুঁজুন...", surah_list_loading: "সূরা তালিকা লোড হচ্ছে...", surah_name: "সূরার নাম",
+                loading: "লোড হচ্ছে...", dev_by: "ডেভেলপ করেছেন", grace: "মহান আল্লাহর অশেষ রহমতে",
+                meccan: "মাক্কী", medinan: "মাদানী", ayahs: "আয়াত", pronun: "উচ্চারণ (EN)",
+                bismillah_ar_en: "Bismillaahir Rahmaanir Raheem", bismillah_bn_en: "শুরু করছি আল্লাহর নামে যিনি পরম করুণাময়, অতি দয়ালু।",
+                view_full_calendar: "সম্পূর্ণ ক্যালেন্ডার দেখুন", full_ramadan_cal: "রমাদান ক্যালেন্ডার ২০২৬", ramadan: "রমাদান"
+            }
+        };
+
+        /**
+         * 2. Utility Helpers
+         */
+        function safeSetText(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
+        function toBnNum(n) { const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯']; return n.toString().split('').map(d => bn[d] || d).join(''); }
+        function getBnSuffix(d) { const day = parseInt(d); if (day === 1) return 'লা'; if (day === 2 || day === 3) return 'রা'; if (day === 4) return 'ঠা'; if (day >= 5 && day <= 18) return 'ই'; return 'শে'; }
+        function getEnSuffix(d) { const day = parseInt(d); if (day > 3 && day < 21) return 'th'; switch (day % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; } }
+        function format12h(timeStr) { if (!timeStr) return "--:--"; try { let [h, m] = timeStr.split(':'); h = parseInt(h); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`; } catch (e) { return "--:--"; } }
+        function parseSec(timeStr) { if(!timeStr) return 0; const parts = timeStr.split(':'); if (parts.length < 2) return 0; return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60; }
+        function t(key) { return (translations[lang] && translations[lang][key.toLowerCase()]) ? translations[lang][key.toLowerCase()] : key; }
+        function toArabicNum(n) { const chars = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩']; return n.toString().split('').map(c => chars[c] || c).join(''); }
+        function toBnTime(timeStr) {
+            if(!timeStr) return timeStr;
+            let s = toBnNum(timeStr);
+            return s.replace('AM', 'এএম').replace('PM', 'পিএম');
+        }
+
+        /**
+         * 3. Core Logic & Calculation
+         */
+        function calculateTotalScore() {
+            let total = 0;
+            Object.values(userData.daily).forEach(d => Object.values(d).forEach(v => { if(v) total += 1; }));
+            Object.values(userData.phase).forEach(p => Object.values(p).forEach(v => { if(v) total += 1; }));
+            Object.values(userData.important).forEach(v => { if(v) total += 5; });
+            Object.values(userData.oddNights).forEach(v => { if(v) total += 1; });
+            return total;
+        }
+
+        function getBanglaDateFull(date) {
+            const monthsBn = ["বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ", "ভাদ্র", "আশ্বিন", "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"];
+            const monthsEn = ["Baishakh", "Jaistha", "Asharh", "Srabon", "Bhadro", "Ashwin", "Kartik", "Agrahayon", "Poush", "Magh", "Falgun", "Chaitro"];
+            const isLeap = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+            let bYear = date.getFullYear() - 593;
+            const startOfYear = new Date(date.getFullYear(), 3, 14);
+            let diff = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+            if (diff < 0) { bYear--; const prevStart = new Date(date.getFullYear() - 1, 3, 14); diff = Math.floor((date - prevStart) / (1000 * 60 * 60 * 24)); }
+            let bMonthIdx = 0; const mLen = [31,31,31,31,31,31,30,30,30,30,30,30];
+            if(isLeap(date.getFullYear())) mLen[10]=31;
+            while(diff >= mLen[bMonthIdx]) { diff -= mLen[bMonthIdx]; bMonthIdx++; }
+            const bDay = diff + 1;
+            
+            if (lang === 'bn') return `${toBnNum(bDay)}${getBnSuffix(bDay)} ${monthsBn[bMonthIdx]} ${toBnNum(bYear)} বঙ্গাব্দ`;
+            return `${bDay}${getEnSuffix(bDay)} ${monthsEn[bMonthIdx]} ${bYear} Bangabda`;
+        }
+
+        /**
+         * 4. Rendering Functions
+         */
+        function renderRakat() {
+            const container = document.getElementById('rakat-container'); if (!container) return;
+            container.innerHTML = rakatData.map(r => `
+                <div class="glass rounded-3xl p-6 rakat-card">
+                    <h4 class="text-xl font-bold text-emerald-400 mb-4 flex justify-between">
+                        <span>${t(r.id)}</span>
+                        <span class="text-[10px] bg-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-tighter">${t('total_rakat')}: ${r.total}</span>
+                    </h4>
+                    <div class="space-y-3 text-sm">
+                        ${r.breakdown.map(b => `<div class="flex justify-between border-b border-white/5 pb-2 ${b.l === 'fard' || b.l === 'witr' ? 'font-bold text-white' : 'text-gray-400'}"><span>${t(b.l)}</span><span>${b.v} ${t('rakat_unit')}</span></div>`).join('')}
+                    </div>
+                </div>`).join('') + `<div class="lg:col-span-3 mt-4 glass p-6 rounded-3xl text-[11px] text-gray-400 text-center"><p>${t('note_rakat')}</p></div>`;
+        }
+
+        function renderNamazTable(active) {
+            const table = document.getElementById('salah-table'); if(!table) return;
+            table.innerHTML = prayerNames.map((p, index) => {
+                const act = (p === active);
+                let endT = prayerNames[index + 1] ? prayerTimings[prayerNames[index + 1]] : nextDayTimings.Fajr;
+                if (p === 'Fajr') endT = prayerTimings.Sunrise;
+                
+                let startStr = format12h(prayerTimings[p]);
+                let endStr = format12h(endT);
+                
+                if (lang === 'bn') {
+                    startStr = toBnTime(startStr);
+                    endStr = toBnTime(endStr);
+                }
+
+                return `<div class="prayer-row p-4 rounded-2xl border flex justify-between items-center transition-all duration-300 ${act ? 'active border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.1)]' : 'bg-slate-800/40 border-white/5 hover:bg-slate-800/60'}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors duration-300 ${act ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-700/50 text-slate-400'}"><i class="fa-solid ${prayerIcons[p]}"></i></div>
+                        <div>
+                            <div class="font-bold text-base md:text-lg ${act ? 'text-white' : 'text-slate-200'}">${t(p)}</div>
+                            <div class="text-[10px] uppercase ${act ? 'text-emerald-300/80' : 'text-slate-500'} tracking-widest mt-0.5">${t('daily_schedule')}</div>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-end gap-1.5">
+                        <div class="font-mono font-bold tracking-tight ${act ? 'text-emerald-400 text-xl' : 'text-slate-200 text-lg'}">${startStr}</div>
+                        <div class="text-[10px] md:text-[11px] font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-colors duration-300 ${act ? 'text-emerald-200/90 bg-emerald-900/40 border border-emerald-500/20' : 'text-slate-400 bg-slate-800/50 border border-white/5'}">
+                            <i class="fa-solid fa-flag-checkered opacity-70"></i> ${t('ends')}: ${endStr}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderSawomCalendar() {
+            const container = document.getElementById('fasting-calendar'); if(!container) return;
+            let html = scheduleData.map((d, i) => {
+                const label = i === 0 ? t('today') : (i === 1 ? t('tomorrow') : d.en.split(',')[0]);
+                const fajrStr = lang === 'bn' ? toBnTime(format12h(d.timings.Fajr)) : format12h(d.timings.Fajr);
+                const maghribStr = lang === 'bn' ? toBnTime(format12h(d.timings.Maghrib)) : format12h(d.timings.Maghrib);
+                
+                return `<div class="flex justify-between items-center p-3 bg-slate-800/40 rounded-2xl border border-white/5">
+                    <div><div class="font-bold text-xs text-white">${label}</div><div class="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">${lang === 'bn' ? toBnNum(d.hijri.day) : d.hijri.day} ${d.hijri.month.en}</div></div>
+                    <div class="flex gap-4 md:gap-6">
+                        <div class="text-center"><div class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">${t('sehri_ends')}</div><div class="font-mono text-xs text-slate-200 mt-0.5">${fajrStr}</div></div>
+                        <div class="text-center"><div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">${t('iftar_starts')}</div><div class="font-mono text-xs text-slate-200 mt-0.5">${maghribStr}</div></div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            html += `<button onclick="openFullRamadanCalendar()" class="w-full mt-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-widest hover:bg-emerald-500/10 transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-calendar-days"></i> ${t('view_full_calendar')}
+            </button>`;
+            
+            container.innerHTML = html;
+        }
+
+        window.openFullRamadanCalendar = function() {
+            const modal = document.getElementById('full-calendar-modal');
+            const box = document.getElementById('full-calendar-content-box');
+            const list = document.getElementById('full-calendar-list');
+            
+            let html = '';
+            Object.keys(ramadan2026Data).forEach(dateKey => {
+                const data = ramadan2026Data[dateKey];
+                const dayStr = lang === 'bn' ? toBnNum(data.ramadan) : data.ramadan;
+                const sehriStr = lang === 'bn' ? toBnTime(format12h(data.sehri)) : format12h(data.sehri);
+                const iftarStr = lang === 'bn' ? toBnTime(format12h(data.iftar)) : format12h(data.iftar);
+                const dateDisplay = lang === 'bn' ? toBnNum(dateKey.replace('Feb', 'ফেব্রু').replace('Mar', 'মার্চ')) : dateKey;
+                
+                const isToday = currentRamadanDay === data.ramadan;
+                const bgClass = isToday ? 'bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-slate-800/40 border border-white/5';
+                const textClass = isToday ? 'text-emerald-400' : 'text-slate-200';
+                
+                html += `
+                <div class="flex justify-between items-center p-4 rounded-2xl ${bgClass}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full ${isToday ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-300'} flex flex-col items-center justify-center font-bold leading-none shrink-0 shadow-inner">
+                            <span class="text-sm">${dayStr}</span>
+                        </div>
+                        <div>
+                            <div class="font-bold ${textClass}">${t('ramadan')} ${dayStr}</div>
+                            <div class="text-[10px] text-slate-400 tracking-wider mt-0.5">${dateDisplay}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 sm:gap-6 shrink-0">
+                        <div class="text-center">
+                            <div class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mb-0.5">${t('sehri_ends')}</div>
+                            <div class="font-mono text-sm ${isToday ? 'text-emerald-300' : 'text-slate-300'}">${sehriStr}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider mb-0.5">${t('iftar_starts')}</div>
+                            <div class="font-mono text-sm ${isToday ? 'text-orange-300' : 'text-slate-300'}">${iftarStr}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeFullRamadanCalendar = function() {
+            const modal = document.getElementById('full-calendar-modal');
+            const box = document.getElementById('full-calendar-content-box');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        };
+
+        function renderPlanner() {
+            safeSetText('planner-day-display', lang === 'bn' ? toBnNum(plannerDay.toString().padStart(2, '0')) : plannerDay.toString().padStart(2, '0'));
+            const dK = `day_${plannerDay}`, pIdx = Math.ceil(plannerDay/10), pK = `phase_${pIdx}`;
+            
+            let tS = 0;
+            const dData = userData.daily[dK] || {};
+            Object.values(dData).forEach(v => { if(v) tS++; });
+            const phAttr = userData.phase_attr || {};
+            Object.keys(phAttr).forEach(pk => { if(phAttr[pk]) { Object.keys(phAttr[pk]).forEach(ti => { if(phAttr[pk][ti] === plannerDay) tS += 1; }); } });
+            const impAttr = userData.important_attr || {};
+            Object.keys(impAttr).forEach(id => { if(impAttr[id] === plannerDay) tS += 5; });
+            if(oddNights.includes(plannerDay) && userData.oddNights[plannerDay]) tS += 1;
+
+            const dl = document.getElementById('daily-tasks-list');
+            if(dl) {
+                const tasksDaily = lang === 'en' ? plannerDailyTasks_EN : plannerDailyTasks_BN;
+                dl.innerHTML = tasksDaily.map((task, i) => {
+                    const ch = dData[i];
+                    return `<div class="flex items-center justify-between p-3 bg-slate-800/40 rounded-2xl border border-white/5">
+                        <span class="text-sm pr-4">${task}</span>
+                        <button onclick="toggleDailyTask(${i})" class="check-btn w-8 h-8 rounded-lg border-2 border-slate-600 flex items-center justify-center flex-shrink-0 ${ch ? 'checked' : ''}">${ch ? '<i class="fa-solid fa-check text-sm"></i>' : ''}</button>
+                    </div>`;
+                }).join('');
+            }
+            
+            const pL = lang === 'en' ? ["Mercy (1-10)", "Forgiveness (11-20)", "Salvation (21-30)"] : ["রহমতের ১০ দিন", "মাগফিরাতের ১০ দিন", "নাজাতের ১০ দিন"];
+            const pT = document.getElementById('phase-title'); if(pT) pT.innerText = pL[pIdx-1];
+            
+            const tl = document.getElementById('ten-day-tasks-list');
+            if(tl) {
+                const tT = lang === 'en' ? ["Broke fast?", "Charity?", "Kahf?", "Tasbih?", "Isale Sawab?", "Death?"] : ["ইফতার?", "সদকা?", "কাহাফ?", "তাসবীহ?", "সওয়াব?", "মৃত্যু?"];
+                const phSt = userData.phase[pK] || {};
+                tl.innerHTML = tT.map((task, i) => {
+                    const ch = phSt[i];
+                    return `<div class="flex items-center justify-between p-3 bg-orange-500/5 rounded-2xl border border-orange-500/20">
+                        <span class="text-[11px] pr-2 leading-tight">${task}</span>
+                        <button onclick="togglePhaseTask(${i})" class="check-btn w-6 h-6 rounded border border-slate-600 flex items-center justify-center flex-shrink-0 ${ch ? 'checked' : ''}">${ch ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}</button>
+                    </div>`;
+                }).join('');
+            }
+
+            const il = document.getElementById('important-tasks-list');
+            if(il) {
+                const tI = lang === 'en' ? [{ id: 'quran_khatam', text: "Quran?" }, { id: 'deen_learning', text: "Masala?" }, { id: 'tarawih_all', text: "Tarawih?" }, { id: 'fast_all', text: "Fast?" }, { id: 'quran_listening', text: "Listen?" }] : [{ id: 'quran_khatam', text: "কুরআন?" }, { id: 'deen_learning', text: "মাসয়ালা?" }, { id: 'tarawih_all', text: "তারাবীহ?" }, { id: 'fast_all', text: "রোযা?" }, { id: 'quran_listening', text: "শ্রবণ?" }];
+                let impH = `<div class="p-3 bg-emerald-500/5 rounded-2xl border border-emerald-500/20"><div class="text-[11px] mb-2 font-medium">${t('odd_night_title')}</div><div class="flex gap-2">${oddNights.map(n => {
+                    const nStr = lang === 'bn' ? toBnNum(n) : n;
+                    return `<button onclick="toggleOddNight(${n})" class="text-[9px] w-7 h-7 rounded border border-slate-600 flex items-center justify-center ${userData.oddNights[n] ? 'bg-emerald-500 text-white border-emerald-500' : ''}">${nStr}</button>`;
+                }).join('')}</div><div class="text-[9px] text-gray-500 mt-2">${t('odd_night_sub')}</div></div>`;
+                il.innerHTML = impH + tI.map(task => {
+                    const ch = userData.important[task.id];
+                    return `<div class="flex items-center justify-between p-3 bg-emerald-500/5 rounded-2xl border border-emerald-500/20"><span class="text-[11px] pr-2 leading-tight">${task.text}</span><button onclick="toggleImportantTask('${task.id}')" class="check-btn w-6 h-6 rounded border border-slate-600 flex items-center justify-center flex-shrink-0 ${ch ? 'checked' : ''}">${ch ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}</button></div>`;
+                }).join('');
+            }
+            safeSetText('today-score', lang === 'bn' ? toBnNum(tS) : tS); 
+            safeSetText('total-score', lang === 'bn' ? toBnNum(calculateTotalScore()) : calculateTotalScore());
+        }
+
+        /**
+         * 5. Centralized Quran Audio System & Premium UI
+         */
+
+        async function loadSurahList() {
+            try {
+                const res = await fetch('https://api.alquran.cloud/v1/surah');
+                const data = await res.json();
+                allSurahs = data.data;
+                renderSurahs(allSurahs);
+            } catch (err) {
+                const l = document.getElementById('quran-loader');
+                if(l) l.innerHTML = `<p class="text-red-400">ব্যর্থ হয়েছে। ইন্টারনেট চেক করুন।</p>`;
+            }
+        }
+
+        function renderSurahs(surahs) {
+            const container = document.getElementById('surah-container');
+            const loader = document.getElementById('quran-loader');
+            if(loader) loader.classList.add('hidden');
+            if(!container) return;
+            container.innerHTML = surahs.map((s, idx) => {
+                const revType = lang === 'bn' ? (s.revelationType === 'Meccan' ? t('meccan') : t('medinan')) : s.revelationType;
+                const ayahCount = lang === 'bn' ? `${toBnNum(s.numberOfAyahs)} ${t('ayahs')}` : `${s.numberOfAyahs} ${t('ayahs')}`;
+                return `<div onclick="loadSurah(${s.number})" class="glass p-5 rounded-2xl border border-white/5 hover:border-emerald-500/50 cursor-pointer transition-all group"><div class="flex justify-between items-center"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center font-bold text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">${lang === 'bn' ? toBnNum(s.number) : s.number}</div><div><h4 class="font-bold text-lg">${lang === 'bn' ? surahNamesBn[idx] : s.englishName}</h4><p class="text-[10px] text-gray-500 uppercase tracking-widest">${revType} • ${ayahCount}</p></div></div><div class="text-right"><div class="arabic-text text-xl text-emerald-400">${s.name}</div></div></div></div>`;
+            }).join('');
+        }
+
+        window.filterSurahs = function() {
+            const term = document.getElementById('surah-search').value.toLowerCase();
+            renderSurahs(allSurahs.filter((s, idx) => 
+                s.englishName.toLowerCase().includes(term) || 
+                s.name.includes(term) || 
+                surahNamesBn[idx].includes(term)
+            ));
+        };
+
+        window.loadSurah = async function(num, autoPlayFromQueue = false) {
+            if (quranPlayer.isPlaying && quranPlayer.surahNum === num && !autoPlayFromQueue) {
+                document.getElementById('surah-list-view').classList.add('hidden');
+                document.getElementById('ayah-reading-view').classList.remove('hidden');
+                let activeItem = audioQueue[currentQueueIndex];
+                if (activeItem) {
+                    setTimeout(() => setAyahUIActive(activeItem.ayahNum, true), 100);
+                }
+                return;
+            }
+
+            stopPlayback();
+            quranPlayer.surahNum = num;
+            
+            const cont = document.getElementById('ayahs-container');
+            const bismillahCont = document.getElementById('bismillah-container');
+            document.getElementById('surah-list-view').classList.add('hidden');
+            document.getElementById('ayah-reading-view').classList.remove('hidden');
+            cont.innerHTML = `<div class="py-20 text-center opacity-50"><i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4"></i><p>লোড হচ্ছে...</p></div>`;
+            bismillahCont.innerHTML = '';
+
+            try {
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,bn.bengali,en.transliteration`);
+                const data = await res.json();
+                
+                currentSurahData = {
+                    ar: data.data[0],
+                    bn: data.data[1],
+                    tr: data.data[2]
+                };
+                
+                const displaySurahName = lang === 'bn' ? surahNamesBn[num - 1] : currentSurahData.ar.englishName;
+                const revTypeStr = lang === 'bn' ? (currentSurahData.ar.revelationType === 'Meccan' ? t('meccan') : t('medinan')) : currentSurahData.ar.revelationType;
+                const ayahCountStr = lang === 'bn' ? `${toBnNum(currentSurahData.ar.numberOfAyahs)} ${t('ayahs')}` : `${currentSurahData.ar.numberOfAyahs} ${t('ayahs')}`;
+                
+                safeSetText('active-surah-name', displaySurahName + " (" + currentSurahData.ar.name + ")");
+                safeSetText('active-surah-info', `${revTypeStr} • ${ayahCountStr}`);
+                
+                let htmlOutput = "";
+
+                if (num !== 1 && num !== 9) {
+                    htmlOutput += `
+                        <div id="ayah-card-0" class="ayah-card glass p-6 text-center mb-8 relative overflow-hidden transition-all duration-300">
+                            <div class="flex flex-col items-center justify-center gap-4 relative z-10 w-full">
+                                <button onclick="playSingleAyah(${num}, 0)" class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center focus:outline-none shadow-[0_0_10px_rgba(16,185,129,0.1)] border border-emerald-500/20">
+                                    <i id="icon-ayah-0" class="fa-solid fa-play ml-0.5"></i>
+                                </button>
+                                
+                                <div id="text-0" class="arabic-text text-3xl md:text-4xl text-emerald-400 transition-colors duration-300 text-center" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
+                                
+                                <div class="space-y-1 text-center w-full mt-2">
+                                    <div class="text-xs md:text-sm text-indigo-300/80 italic font-medium">${t('bismillah_ar_en')}</div>
+                                    <div class="text-[12px] md:text-sm text-gray-300">${t('bismillah_bn_en')}</div>
+                                </div>
+                            </div>
+                            <div id="prog-0" class="ayah-progress"></div>
+                        </div>
+                    `;
+                    currentSurahData.ar.ayahs[0].text = currentSurahData.ar.ayahs[0].text.replace("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ", "").trim();
+                }
+
+                htmlOutput += currentSurahData.ar.ayahs.map((ayah, i) => {
+                    const ayahNumStr = lang === 'bn' ? toBnNum(ayah.numberInSurah) : ayah.numberInSurah;
+                    return `
+                    <div id="ayah-card-${ayah.numberInSurah}" class="ayah-card p-5 md:p-6 mb-4 relative transition-all duration-300">
+                        
+                        <div class="block relative z-10 w-full mb-6">
+                            <button onclick="playSingleAyah(${num}, ${ayah.numberInSurah})" class="float-left w-10 h-10 mt-2 mr-4 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center focus:outline-none border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                                <i id="icon-ayah-${ayah.numberInSurah}" class="fa-solid fa-play ml-0.5"></i>
+                            </button>
+                            
+                            <div id="text-${ayah.numberInSurah}" class="arabic-text text-3xl md:text-4xl text-right leading-[2.5] md:leading-[2.8] tracking-wide text-gray-100 transition-colors duration-300 block w-full" dir="rtl">
+                                ${ayah.text} 
+                                <span class="inline-flex items-center justify-center relative mx-2 align-middle" style="width: 2.5rem; height: 2.5rem;">
+                                    <svg viewBox="0 0 36 36" class="absolute inset-0 w-full h-full text-emerald-500 stroke-current opacity-80" fill="none" stroke-width="1.5">
+                                        <circle cx="18" cy="18" r="15" stroke-width="1.2"/>
+                                        <circle cx="18" cy="18" r="11" stroke-width="0.5"/>
+                                        <path d="M18,3 L18,5 M18,31 L18,33 M3,18 L5,18 M31,18 L33,18" stroke-width="1.5"/>
+                                    </svg>
+                                    <span class="text-emerald-400 font-bold text-base leading-none pt-1" dir="ltr" style="font-family: 'Plus Jakarta Sans', sans-serif;">${toArabicNum(ayah.numberInSurah)}</span>
+                                </span>
+                            </div>
+                            <div class="clear-both"></div>
+                        </div>
+                        
+                        <div class="space-y-3 relative z-10 bg-slate-900/30 p-4 rounded-xl border border-white/5 ml-0 md:ml-[4.5rem]">
+                            <p class="text-[12px] md:text-sm text-indigo-300/80 italic leading-relaxed"><span class="font-semibold text-indigo-400/80 uppercase tracking-wider mr-1">${t('pronun')}:</span>${currentSurahData.tr.ayahs[i].text}</p>
+                            <p class="text-[14px] md:text-base text-gray-200 leading-relaxed"><span class="font-bold text-emerald-400/90 mr-1.5">${ayahNumStr}.</span>${currentSurahData.bn.ayahs[i].text}</p>
+                        </div>
+                        
+                        <div id="prog-${ayah.numberInSurah}" class="ayah-progress"></div>
+                    </div>`;
+                }).join('');
+
+                cont.innerHTML = htmlOutput;
+
+                if (autoPlayFromQueue) {
+                    setTimeout(() => toggleFullSurahPlay(), 500);
+                }
+
+            } catch (err) { cont.innerHTML = `<p class="text-red-400 text-center">আয়াত লোড করা সম্ভব হয়নি।</p>`; }
+        };
+
+        window.backToSurahList = function() {
+            document.getElementById('surah-list-view').classList.remove('hidden');
+            document.getElementById('ayah-reading-view').classList.add('hidden');
+        };
+
+        window.restoreSurahView = function() {
+            if (quranPlayer.surahNum > 0) {
+                document.getElementById('surah-list-view').classList.add('hidden');
+                document.getElementById('ayah-reading-view').classList.remove('hidden');
+                let activeItem = audioQueue[currentQueueIndex];
+                if (activeItem) {
+                    setTimeout(() => setAyahUIActive(activeItem.ayahNum, true), 100);
+                }
+            }
+        };
+
+        // --- NEW CENTRALIZED AUDIO QUEUE SYSTEM --- //
+
+        function stopPlayback() {
+            globalAudio.pause();
+            globalAudio.src = "";
+            if (quranPlayer.animFrame) cancelAnimationFrame(quranPlayer.animFrame);
+            
+            resetAllUI();
+            
+            quranPlayer.isPlaying = false;
+            quranPlayer.mode = 'none';
+            audioQueue = [];
+            currentQueueIndex = 0;
+            
+            const fPlayer = document.getElementById('quran-floating-player');
+            if (fPlayer) fPlayer.classList.add('translate-y-[150%]', 'opacity-0');
+        }
+
+        function resetAllUI() {
+            const mainIcon = document.getElementById('icon-main-play');
+            if (mainIcon) { mainIcon.classList.remove('fa-pause'); mainIcon.classList.add('fa-play'); }
+            
+            const floatingIcon = document.getElementById('floating-play-icon');
+            if (floatingIcon) { floatingIcon.classList.remove('fa-pause'); floatingIcon.classList.add('fa-play'); }
+
+            document.querySelectorAll('.ayah-card').forEach(el => {
+                el.classList.remove('playing');
+                const prog = el.querySelector('.ayah-progress');
+                if (prog) { prog.style.transition = 'none'; prog.style.width = '0%'; }
+                
+                const icon = el.querySelector('i.fa-pause');
+                if (icon) { icon.classList.remove('fa-pause'); icon.classList.add('fa-play'); }
+            });
+            
+            document.querySelectorAll('[id^="text-"]').forEach(el => { el.classList.remove('text-emerald-400'); });
+        }
+
+        function setAyahUIActive(ayahNum, isActive) {
+            const card = document.getElementById(`ayah-card-${ayahNum}`);
+            const icon = document.getElementById(`icon-ayah-${ayahNum}`);
+            const text = document.getElementById(`text-${ayahNum}`);
+            
+            if (isActive) {
+                if(card) { card.classList.add('playing'); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                if(icon) { icon.classList.remove('fa-play'); icon.classList.add('fa-pause'); }
+                if(text) { text.classList.add('text-emerald-400'); }
+            } else {
+                if(card) { card.classList.remove('playing'); }
+                if(icon) { icon.classList.remove('fa-pause'); icon.classList.add('fa-play'); }
+                if(text) { text.classList.remove('text-emerald-400'); }
+            }
+        }
+
+        function runProgressBar(ayahNum, audioObj) {
+            if (quranPlayer.animFrame) cancelAnimationFrame(quranPlayer.animFrame);
+            function loop() {
+                if (audioObj && audioObj.duration && !audioObj.paused) {
+                    const percentage = (audioObj.currentTime / audioObj.duration) * 100;
+                    const pb = document.getElementById(`prog-${ayahNum}`);
+                    if (pb) { pb.style.transition = 'none'; pb.style.width = percentage + '%'; }
+                }
+                quranPlayer.animFrame = requestAnimationFrame(loop);
+            }
+            quranPlayer.animFrame = requestAnimationFrame(loop);
+        }
+
+        window.playSingleAyah = function(surahNum, ayahNumInSurah) {
+            let activeItem = audioQueue[currentQueueIndex];
+            
+            if (quranPlayer.isPlaying && quranPlayer.mode === 'single' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
+                pauseQueue();
+                return;
+            } else if (!quranPlayer.isPlaying && quranPlayer.mode === 'single' && activeItem && activeItem.ayahNum === ayahNumInSurah) {
+                resumeQueue();
+                return;
+            }
+
+            stopPlayback();
+            quranPlayer.mode = 'single';
+            quranPlayer.surahNum = surahNum;
+
+            if (ayahNumInSurah === 0) {
+                audioQueue.push({ type: 'ar', src: 'https://everyayah.com/data/Alafasy_128kbps/001001.mp3', ayahNum: 0 });
+            } else {
+                const sStr = String(surahNum).padStart(3, '0');
+                const aStr = String(ayahNumInSurah).padStart(3, '0');
+                audioQueue.push({ type: 'ar', src: `https://everyayah.com/data/Alafasy_128kbps/${sStr}${aStr}.mp3`, ayahNum: ayahNumInSurah });
+            }
+            playQueue();
+        };
+
+        window.toggleFullSurahPlay = function() {
+            if (quranPlayer.isPlaying && quranPlayer.mode === 'full') {
+                pauseQueue();
+                return;
+            } else if (!quranPlayer.isPlaying && quranPlayer.mode === 'full' && audioQueue.length > 0) {
+                resumeQueue();
+                return;
+            }
+
+            stopPlayback();
+            quranPlayer.mode = 'full';
+            
+            if (!currentSurahData) return;
+
+            let hasBismillah = (quranPlayer.surahNum !== 1 && quranPlayer.surahNum !== 9);
+            if (hasBismillah) {
+                audioQueue.push({ type: 'ar', src: 'https://everyayah.com/data/Alafasy_128kbps/001001.mp3', ayahNum: 0 });
+            }
+
+            currentSurahData.ar.ayahs.forEach((a) => {
+                const sStr = String(quranPlayer.surahNum).padStart(3, '0');
+                const aStr = String(a.numberInSurah).padStart(3, '0');
+                audioQueue.push({ type: 'ar', src: `https://everyayah.com/data/Alafasy_128kbps/${sStr}${aStr}.mp3`, ayahNum: a.numberInSurah });
+            });
+
+            playQueue();
+        };
+
+        window.toggleFloatingPlay = function(event) {
+            if(event) event.stopPropagation();
+            if (quranPlayer.isPlaying) {
+                pauseQueue();
+            } else {
+                resumeQueue();
+            }
+        };
+
+        function playQueue() {
+            if (currentQueueIndex >= audioQueue.length) {
+                let wasFull = (quranPlayer.mode === 'full');
+                stopPlayback();
+                if (wasFull && quranPlayer.surahNum < 114) {
+                    loadSurah(quranPlayer.surahNum + 1, true);
+                }
+                return;
+            }
+
+            quranPlayer.isPlaying = true;
+            let item = audioQueue[currentQueueIndex];
+            
+            document.querySelectorAll('.ayah-card').forEach(el => {
+                if (el.id !== `ayah-card-${item.ayahNum}`) {
+                    el.classList.remove('playing');
+                    const icon = el.querySelector('i.fa-pause');
+                    if (icon) { icon.classList.remove('fa-pause'); icon.classList.add('fa-play'); }
+                    const text = el.querySelector('.arabic-text');
+                    if(text) { text.classList.remove('text-emerald-400'); }
+                    const pb = el.querySelector('.ayah-progress');
+                    if(pb) { pb.style.width = '0%'; pb.style.transition = 'none'; }
+                }
+            });
+
+            const mainIcon = document.getElementById('icon-main-play');
+            if (quranPlayer.mode === 'full' && mainIcon) {
+                mainIcon.classList.remove('fa-play'); mainIcon.classList.add('fa-pause');
+            }
+
+            const fPlayer = document.getElementById('quran-floating-player');
+            const fIcon = document.getElementById('floating-play-icon');
+            if (fPlayer) fPlayer.classList.remove('translate-y-[150%]', 'opacity-0');
+            if (fIcon) { fIcon.classList.remove('fa-play'); fIcon.classList.add('fa-pause'); }
+            
+            const displaySurahName = lang === 'bn' ? surahNamesBn[quranPlayer.surahNum - 1] : (currentSurahData ? currentSurahData.ar.englishName : "Al Quran");
+            const displayAyahInfo = item.ayahNum === 0 ? (lang === 'bn' ? "বিসমিল্লাহ" : "Bismillah") : (lang === 'bn' ? "আয়াত " + toBnNum(item.ayahNum) : "Ayah " + item.ayahNum);
+            safeSetText('floating-surah-name', displaySurahName);
+            safeSetText('floating-ayah-info', displayAyahInfo);
+
+            if (item.type === 'ar') {
+                globalAudio.src = item.src;
+                globalAudio.play().then(() => {
+                    if (!document.getElementById('ayah-reading-view').classList.contains('hidden')) {
+                        setAyahUIActive(item.ayahNum, true);
+                    }
+                    runProgressBar(item.ayahNum, globalAudio);
+                }).catch(e => {
+                    console.warn("Arabic Audio failed", e);
+                    currentQueueIndex++;
+                    playQueue(); 
+                });
+            }
+        }
+
+        function pauseQueue() {
+            quranPlayer.isPlaying = false;
+            let item = audioQueue[currentQueueIndex];
+            if (item && item.type === 'ar') {
+                globalAudio.pause();
+                if (quranPlayer.animFrame) cancelAnimationFrame(quranPlayer.animFrame);
+                
+                const icon = document.getElementById(`icon-ayah-${item.ayahNum}`);
+                if (icon) { icon.classList.remove('fa-pause'); icon.classList.add('fa-play'); }
+            }
+            
+            const mainIcon = document.getElementById('icon-main-play');
+            if (mainIcon) { mainIcon.classList.remove('fa-pause'); mainIcon.classList.add('fa-play'); }
+            
+            const fIcon = document.getElementById('floating-play-icon');
+            if (fIcon) { fIcon.classList.remove('fa-pause'); fIcon.classList.add('fa-play'); }
+        }
+
+        function resumeQueue() {
+            let item = audioQueue[currentQueueIndex];
+            if (!item) return;
+            quranPlayer.isPlaying = true;
+            
+            const icon = document.getElementById(`icon-ayah-${item.ayahNum}`);
+            if (icon) { icon.classList.remove('fa-play'); icon.classList.add('fa-pause'); }
+
+            const mainIcon = document.getElementById('icon-main-play');
+            if (quranPlayer.mode === 'full' && mainIcon) {
+                mainIcon.classList.remove('fa-play'); mainIcon.classList.add('fa-pause');
+            }
+            
+            const fIcon = document.getElementById('floating-play-icon');
+            if (fIcon) { fIcon.classList.remove('fa-play'); fIcon.classList.add('fa-pause'); }
+
+            if (item.type === 'ar') {
+                globalAudio.play().catch(e => {
+                    currentQueueIndex++;
+                    playQueue();
+                });
+                runProgressBar(item.ayahNum, globalAudio);
+            }
+        }
+
+        globalAudio.onended = () => {
+            let item = audioQueue[currentQueueIndex];
+            if (item && item.type === 'ar') {
+                const pb = document.getElementById(`prog-${item.ayahNum}`);
+                if (pb) pb.style.width = '0%';
+                currentQueueIndex++;
+                playQueue();
+            }
+        };
+
+        /**
+         * 6. Interface & State Handlers
+         */
+        window.setLanguage = function(newLang) { lang = newLang; localStorage.setItem('app_lang', lang); updateUI(); };
+        window.setLocationMode = function(mode) {
+            locMode = mode; localStorage.setItem('loc_mode', mode);
+            document.getElementById('manual-loc-select').classList.toggle('hidden', mode === 'auto');
+            document.getElementById('btn-loc-auto').classList.toggle('active', mode === 'auto');
+            document.getElementById('btn-loc-manual').classList.toggle('active', mode === 'manual');
+            if (mode === 'manual') updateManualDistrict(); else init();
+        };
+        window.updateManualDistrict = function() {
+            manualDist = document.getElementById('dist-select').value;
+            localStorage.setItem('manual_dist', manualDist);
+            const dist = districtCoords[manualDist];
+            fetchTimings(dist.lat, dist.lon).then(() => {
+                document.getElementById('header-location').innerText = lang === 'en' ? dist.name.en : dist.name.bn;
+                updateUI();
+            });
+        };
+
+        window.switchPage = function(pId) {
+            currentPage = pId;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const pg = document.getElementById(`page-${pId}`); if(pg) pg.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active', 'text-gray-500'));
+            const nav = document.getElementById(`nav-${pId}`); if(nav) nav.classList.add('active');
+            document.querySelectorAll('.nav-item:not(.active)').forEach(i => i.classList.add('text-gray-500'));
+            if(pId === 'planner') { plannerDay = currentRamadanDay; renderPlanner(); }
+            else if(pId === 'quran') { 
+                if (allSurahs.length === 0) loadSurahList(); 
+                else if (quranPlayer.isPlaying) restoreSurahView();
+            }
+            else if(pId === 'settings') {
+                document.getElementById('manual-loc-select').classList.toggle('hidden', locMode === 'auto');
+                document.getElementById('btn-loc-auto').classList.toggle('active', locMode === 'auto');
+                document.getElementById('btn-loc-manual').classList.toggle('active', locMode === 'manual');
+                document.getElementById('dist-select').value = manualDist;
+            }
+            updateUI();
+        };
+
+        window.changePlannerDay = function(delta) { plannerDay = Math.max(1, Math.min(30, plannerDay + delta)); renderPlanner(); };
+        window.toggleDailyTask = function(i) { const k = `day_${plannerDay}`; if(!userData.daily[k]) userData.daily[k] = {}; userData.daily[k][i] = !userData.daily[k][i]; saveData(); renderPlanner(); };
+        window.togglePhaseTask = function(i) { 
+            const phaseNum = Math.ceil(plannerDay/10); const k = `phase_${phaseNum}`; if(!userData.phase[k]) userData.phase[k] = {}; 
+            const newState = !userData.phase[k][i]; userData.phase[k][i] = newState;
+            if(!userData.phase_attr) userData.phase_attr = {}; if(!userData.phase_attr[k]) userData.phase_attr[k] = {};
+            if(newState) userData.phase_attr[k][i] = plannerDay; else delete userData.phase_attr[k][i];
+            saveData(); renderPlanner(); 
+        };
+        window.toggleImportantTask = function(id) { 
+            const newState = !userData.important[id]; userData.important[id] = newState;
+            if(!userData.important_attr) userData.important_attr = {};
+            if(newState) userData.important_attr[id] = plannerDay; else delete userData.important_attr[id];
+            saveData(); renderPlanner(); 
+        };
+        window.toggleOddNight = function(d) { userData.oddNights[d] = !userData.oddNights[d]; saveData(); renderPlanner(); };
+        function saveData() { localStorage.setItem('ramadan_planner_data_v5', JSON.stringify(userData)); }
+
+        /**
+         * 7. Periodic Updates & Init
+         */
+        function updateDisplayStatic(apiData) {
+            const now = new Date();
+            const hj = apiData.date.hijri;
+            const mText = hj.month.en.toLowerCase().includes('ramadan') ? 'Ramadan' : hj.month.en;
+            safeSetText('top-ar-date', (lang==='bn') ? `${toBnNum(hj.day)}${getBnSuffix(hj.day)} ${mText==='Ramadan'?'রমজান':mText} ${toBnNum(hj.year)} ${t('hijri')}` : `${hj.day}${getEnSuffix(hj.day)} ${mText} ${hj.year} ${t('hijri')}`);
+            safeSetText('top-bn-date', getBanglaDateFull(now));
+            const mBn = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+            const mEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            safeSetText('top-en-date', lang==='bn' ? `${toBnNum(now.getDate())}${getBnSuffix(now.getDate())} ${mBn[now.getMonth()]} ${toBnNum(now.getFullYear())}` : `${now.getDate()}${getEnSuffix(now.getDate())} ${mEn[now.getMonth()]} ${now.getFullYear()}`);
+            
+            const sunriseStr = format12h(prayerTimings.Sunrise);
+            safeSetText('sunrise-time', lang === 'bn' ? toBnTime(sunriseStr) : sunriseStr);
+            safeSetText('hijri-date', (lang === 'bn' ? toBnNum(hj.day) : hj.day) + " " + mText);
+        }
+
+        function updateUI() {
+            const statusLabel = (scheduleData.length > 0) ? t('synced') : t('syncing');
+            safeSetText('header-sync', statusLabel);
+            document.querySelectorAll('[data-lang]').forEach(el => el.innerText = t(el.getAttribute('data-lang')));
+            const btnEn = document.getElementById('btn-lang-en'), btnBn = document.getElementById('btn-lang-bn');
+            if (btnEn) btnEn.classList.toggle('active', lang === 'en');
+            if (btnBn) btnBn.classList.toggle('active', lang === 'bn');
+            const labels = {
+                'lbl-curr-prayer': 'curr_prayer', 'lbl-next-prayer': 'next_prayer', 'lbl-remaining': 'remaining',
+                'lbl-hijri': 'hijri', 'lbl-region': 'region', 'val-region': 'region_val', 'lbl-sunrise': 'sunrise',
+                'lbl-daily-schedule': 'daily_schedule', 'lbl-sehri-ends': 'sehri_ends', 'lbl-iftar-starts': 'iftar_starts',
+                'lbl-sehri-dua': 'sehri_dua', 'lbl-iftar-dua': 'iftar_dua', 'lbl-sawom-cal': 'sawom_cal',
+                'lbl-planner-title': 'planner_title', 'lbl-ramadan-day': 'ramadan_day', 'lbl-score-today': 'score_today',
+                'lbl-pts-today': 'pts_today', 'lbl-score-total': 'score_total', 'lbl-pts-total': 'pts_total',
+                'lbl-daily-tasks': 'daily_tasks', 'lbl-pts-rule': 'pts_rule', 'lbl-phase-rule': 'phase_rule',
+                'lbl-imp-tasks': 'imp_tasks', 'lbl-imp-rule': 'imp_rule', 'lbl-rakat-title': 'rakat_title',
+                'lbl-settings-title': 'settings_title', 'lbl-set-lang': 'set_lang', 'lbl-set-loc': 'set_loc',
+                'lbl-loc-auto': 'loc_auto', 'lbl-loc-manual': 'loc_manual', 'lbl-select-dist': 'select_dist',
+                'lbl-quran-title': 'quran_title', 'lbl-back': 'back'
+            };
+            for (let id in labels) safeSetText(id, t(labels[id]));
+            
+            const searchInput = document.getElementById('surah-search');
+            if(searchInput) searchInput.placeholder = t('search_surah');
+
+            renderRakat();
+            if(currentPage === 'planner') renderPlanner();
+            if(currentPage === 'sawom') renderSawomCalendar();
+            if(scheduleData.length > 0) updateDisplayStatic({ date: { hijri: scheduleData[0].hijri } });
+            
+            if (allSurahs.length > 0 && currentPage === 'quran' && document.getElementById('surah-list-view').classList.contains('hidden') === false) {
+                renderSurahs(allSurahs);
+            }
+            
+            update();
+        }
+
+        async function fetchTimings(lat, lon) {
+            try {
+                const today = new Date();
+                const formatDate = (d) => `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
+                const formatKey = (d) => {
+                    const mN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    return `${d.getDate().toString().padStart(2, '0')} ${mN[d.getMonth()]} ${d.getFullYear()}`;
+                };
+                const fetchDay = async (offset) => {
+                    const d = new Date(today); d.setDate(today.getDate() + offset);
+                    const res = await fetch(`https://api.aladhan.com/v1/timings/${formatDate(d)}?latitude=${lat}&longitude=${lon}&method=1&school=1&tune=0,0,0,0,0,0,2,0,0`);
+                    const json = await res.json();
+                    const key = formatKey(d);
+                    if (ramadan2026Data[key]) {
+                        json.data.timings.Fajr = ramadan2026Data[key].sehri;
+                        json.data.timings.Maghrib = ramadan2026Data[key].iftar;
+                        json.data.date.hijri.month.en = "Ramadan";
+                        json.data.date.hijri.day = ramadan2026Data[key].ramadan.toString();
+                    }
+                    return json;
+                };
+                const resList = await Promise.all([fetchDay(0), fetchDay(1), fetchDay(2), fetchDay(3), fetchDay(4), fetchDay(5), fetchDay(6)]);
+                scheduleData = resList.map(r => ({ timings: r.data.timings, hijri: r.data.date.hijri, en: r.data.date.readable }));
+                prayerTimings = scheduleData[0].timings;
+                nextDayTimings = scheduleData[1].timings;
+                const hj = resList[0].data.date.hijri;
+                if(hj.month.en.toLowerCase().includes('ramadan')) { currentRamadanDay = parseInt(hj.day); plannerDay = currentRamadanDay; }
+                updateDisplayStatic(resList[0].data);
+            } catch (err) { console.error(err); }
+        }
+
+        function update() {
+            if (!prayerTimings.Fajr || currentPage === 'rakat' || currentPage === 'settings' || currentPage === 'planner' || currentPage === 'quran') return;
+            const now = new Date(); const nS = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            
+            if (currentPage === 'namaz') {
+                const tFajr = parseSec(prayerTimings.Fajr);
+                const tSunrise = parseSec(prayerTimings.Sunrise);
+                const tDhuhr = parseSec(prayerTimings.Dhuhr);
+                const tAsr = parseSec(prayerTimings.Asr);
+                const tMaghrib = parseSec(prayerTimings.Maghrib);
+                const tIsha = parseSec(prayerTimings.Isha);
+                const nxFajr = parseSec(nextDayTimings.Fajr) + 86400;
+
+                const timeline = [
+                    { s: 0, e: tFajr, type: 'waqt', curr: 'Isha', next: 'Fajr', target: tFajr, progS: parseSec(prayerTimings.Isha) - 86400, progE: tFajr },
+                    { s: tFajr, e: tSunrise, type: 'waqt', curr: 'Fajr', next: 'Dhuhr', target: tSunrise, progS: tFajr, progE: tSunrise },
+                    { s: tSunrise, e: tSunrise + 900, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr }, 
+                    { s: tSunrise + 900, e: tDhuhr - 600, type: 'nowaqt', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr },
+                    { s: tDhuhr - 600, e: tDhuhr, type: 'makruh', curr: 'None', next: 'Dhuhr', target: tDhuhr, progS: tSunrise, progE: tDhuhr }, 
+                    { s: tDhuhr, e: tAsr, type: 'waqt', curr: 'Dhuhr', next: 'Asr', target: tAsr, progS: tDhuhr, progE: tAsr },
+                    { s: tAsr, e: tMaghrib - 600, type: 'waqt', curr: 'Asr', next: 'Maghrib', target: tMaghrib, progS: tAsr, progE: tMaghrib }, 
+                    { s: tMaghrib - 600, e: tMaghrib, type: 'makruh', curr: 'None', next: 'Maghrib', target: tMaghrib, progS: tAsr, progE: tMaghrib }, 
+                    { s: tMaghrib, e: tIsha, type: 'waqt', curr: 'Maghrib', next: 'Isha', target: tIsha, progS: tMaghrib, progE: tIsha },
+                    { s: tIsha, e: 86400, type: 'waqt', curr: 'Isha', next: 'Fajr', target: nxFajr, progS: tIsha, progE: nxFajr }
+                ];
+
+                let activeState = timeline.find(st => nS >= st.s && nS < st.e);
+                if (!activeState) activeState = timeline[timeline.length - 1]; 
+
+                let diff = activeState.target - nS;
+                if (diff < 0) diff += 86400;
+
+                let countdownStr = `${String(Math.floor(diff/3600)).padStart(2,'0')}:${String(Math.floor((diff%3600)/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
+                safeSetText('countdown', lang === 'bn' ? toBnNum(countdownStr) : countdownStr);
+                
+                let progTot = activeState.progE - activeState.progS;
+                let progVal = nS - activeState.progS;
+                if (nS < activeState.progS && activeState.progS < 0) {
+                    progVal = nS - activeState.progS;
+                } else if (nS < activeState.progS) {
+                    progVal = (nS + 86400) - activeState.progS;
+                }
+
+                let prog = (progTot === 0) ? 0 : (progVal / progTot) * 100;
+                const pb = document.getElementById('progress-bar');
+                if(pb) pb.style.width = `${Math.min(100, Math.max(0, prog))}%`;
+
+                const dashboardCard = document.querySelector('#page-namaz .glass.group');
+                const glowCircle = dashboardCard ? dashboardCard.querySelector('.absolute') : null;
+                const lblCurr = document.getElementById('lbl-curr-prayer');
+                const nameCurr = document.getElementById('current-prayer-name');
+                
+                if (activeState.type === 'waqt') {
+                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all';
+                    if(lblCurr) { lblCurr.innerText = t('curr_prayer'); lblCurr.className = 'text-emerald-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurr) { nameCurr.innerText = t(activeState.curr); nameCurr.className = 'text-6xl font-black mt-2 glow-green text-white'; }
+                    safeSetText('lbl-remaining', t('waqt_ends_in'));
+                    if(pb) pb.className = 'h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-1000';
+                } else if (activeState.type === 'makruh') {
+                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all';
+                    if(lblCurr) { lblCurr.innerText = t('alert'); lblCurr.className = 'text-red-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurr) { nameCurr.innerText = t('forbidden_time'); nameCurr.className = 'text-4xl sm:text-5xl font-black mt-2 text-red-400'; }
+                    safeSetText('lbl-remaining', t('next_prayer_in'));
+                    if(pb) pb.className = 'h-full bg-gradient-to-r from-red-500 to-orange-400 transition-all duration-1000';
+                } else if (activeState.type === 'nowaqt') {
+                    if(glowCircle) glowCircle.className = 'absolute -top-10 -right-10 w-40 h-40 bg-slate-500/10 rounded-full blur-3xl group-hover:bg-slate-500/20 transition-all';
+                    if(lblCurr) { lblCurr.innerText = t('status'); lblCurr.className = 'text-gray-400 font-bold uppercase tracking-widest text-xs'; }
+                    if(nameCurr) { nameCurr.innerText = t('no_waqt'); nameCurr.className = 'text-4xl sm:text-5xl font-black mt-2 text-gray-300'; }
+                    safeSetText('lbl-remaining', t('next_prayer_in'));
+                    if(pb) pb.className = 'h-full bg-gradient-to-r from-gray-500 to-gray-400 transition-all duration-1000';
+                }
+
+                safeSetText('next-prayer-name', t(activeState.next));
+                renderNamazTable(activeState.type === 'waqt' ? activeState.curr : null);
+
+            } else if (currentPage === 'sawom') {
+                let sS = parseSec(prayerTimings.Fajr), iS = parseSec(prayerTimings.Maghrib), tgt, start, lbl;
+                if (nS < sS) { tgt = sS; start = (parseSec(nextDayTimings.Isha) || 0) - 86400; lbl = t('sehri_left'); }
+                else if (nS < iS) { tgt = iS; start = sS; lbl = t('iftar_left'); }
+                else { tgt = parseSec(nextDayTimings.Fajr) + 86400; start = iS; lbl = t('sehri_left'); }
+                
+                let sawomCdStr = `${String(Math.floor((tgt-nS)/3600)).padStart(2,'0')}:${String(Math.floor(((tgt-nS)%3600)/60)).padStart(2,'0')}:${String((tgt-nS)%60).padStart(2,'0')}`;
+                safeSetText('sawom-countdown', lang === 'bn' ? toBnNum(sawomCdStr) : sawomCdStr);
+                
+                safeSetText('sawom-status-label', lbl);
+                const sp = document.getElementById('sawom-progress');
+                if(sp) sp.style.width = `${((nS-start)/(tgt-start))*100}%`;
+                
+                safeSetText('sehri-time-val', lang === 'bn' ? toBnTime(format12h(prayerTimings.Fajr)) : format12h(prayerTimings.Fajr));
+                safeSetText('iftar-time-val', lang === 'bn' ? toBnTime(format12h(prayerTimings.Maghrib)) : format12h(prayerTimings.Maghrib));
+                renderSawomCalendar();
+            }
+        }
+
+        async function init() {
+            if (locMode === 'manual') { updateManualDistrict(); }
+            else {
+                navigator.geolocation.getCurrentPosition(
+                    async (p) => { await fetchTimings(p.coords.latitude, p.coords.longitude); safeSetText('header-location', lang === 'en' ? "Current Location" : "আপনার বর্তমান স্থান"); updateUI(); },
+                    async () => { await fetchTimings(23.81, 90.41); safeSetText('header-location', lang === 'en' ? "Dhaka, Bangladesh" : "ঢাকা, বাংলাদেশ"); updateUI(); }
+                );
+            }
+            setInterval(update, 1000);
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
