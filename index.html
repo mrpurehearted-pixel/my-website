@@ -2213,6 +2213,164 @@
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
+    // --- Element references ---
+    // Get references to the HTML elements we just created
+    const authSection = document.getElementById('auth-section');
+    const dashboardSection = document.getElementById('dashboard-section');
+
+    const registerEmailInput = document.getElementById('register-email');
+    const registerPasswordInput = document.getElementById('register-password');
+    const registerButton = document.getElementById('register-button');
+    const registerError = document.getElementById('register-error');
+
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginButton = document.getElementById('login-button');
+    const googleLoginButton = document.getElementById('google-login-button'); // For Google Sign-In (optional)
+    const loginError = document.getElementById('login-error');
+
+    const userDisplayName = document.getElementById('user-display-name');
+    const userUid = document.getElementById('user-uid');
+    const logoutButton = document.getElementById('logout-button');
+
+    const profileNameInput = document.getElementById('profile-name');
+    const saveProfileButton = document.getElementById('save-profile-button');
+    const profileMessage = document.getElementById('profile-message');
+
+    const amalActivityInput = document.getElementById('amal-activity');
+    const amalPointsInput = document.getElementById('amal-points');
+    const addAmalButton = document.getElementById('add-amal-button');
+    const amalMessage = document.getElementById('amal-message');
+    const rankingList = document.getElementById('ranking-list');
+
+
+    // --- Authentication Functions ---
+    // Event listener for the Register button
+    registerButton.addEventListener('click', async () => {
+        const email = registerEmailInput.value;
+        const password = registerPasswordInput.value;
+        try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            registerError.textContent = ''; // Clear any previous errors
+            alert('Registration successful! You are now logged in.'); // User feedback
+            // Firebase's onAuthStateChanged will handle UI update
+        } catch (error) {
+            registerError.textContent = error.message; // Display error message
+            console.error("Error during registration:", error);
+        }
+    });
+
+    // Event listener for the Login button
+    loginButton.addEventListener('click', async () => {
+        const email = loginEmailInput.value;
+        const password = loginPasswordInput.value;
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            loginError.textContent = ''; // Clear any previous errors
+            // Firebase's onAuthStateChanged will handle UI update
+        } catch (error) {
+            loginError.textContent = error.message; // Display error message
+            console.error("Error during login:", error);
+        }
+    });
+
+    // Event listener for the Logout button
+    logoutButton.addEventListener('click', async () => {
+        try {
+            await auth.signOut();
+            alert('You have been logged out.'); // User feedback
+            // Firebase's onAuthStateChanged will handle UI update
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    });
+
+    // Optional: Google Sign-In Event Listener
+    // You'll need to enable Google Sign-In provider in Firebase Console (Authentication -> Sign-in method)
+    googleLoginButton.addEventListener('click', async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await auth.signInWithPopup(provider);
+            loginError.textContent = ''; // Clear any previous errors
+        } catch (error) {
+            loginError.textContent = error.message; // Display error message
+            console.error("Error during Google Sign-In:", error);
+        }
+    });
+
+
+    // --- Authentication State Listener (Crucial for UI management) ---
+    // This function runs every time the user's login state changes (login, logout, page load)
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // User is signed in.
+            authSection.style.display = 'none';      // Hide authentication forms
+            dashboardSection.style.display = 'block'; // Show dashboard
+            userDisplayName.textContent = user.displayName || user.email; // Display user's name or email
+            userUid.textContent = user.uid;           // Display user's unique ID
+
+            // Now that a user is logged in, load their profile and amal data
+            loadUserProfile(user.uid);
+            // listenForAmalTrackerUpdates(user.uid); // (Optional: for individual amal history)
+            fetchRanking(); // Refresh the global ranking
+
+        } else {
+            // User is signed out.
+            authSection.style.display = 'block';      // Show authentication forms
+            dashboardSection.style.display = 'none'; // Hide dashboard
+            userDisplayName.textContent = '';
+            userUid.textContent = '';
+            profileNameInput.value = ''; // Clear profile input
+            amalActivityInput.value = ''; // Clear amal inputs
+            amalPointsInput.value = '';
+            rankingList.innerHTML = ''; // Clear ranking when logged out
+            registerError.textContent = ''; // Clear errors
+            loginError.textContent = ''; // Clear errors
+            profileMessage.textContent = ''; // Clear messages
+            amalMessage.textContent = ''; // Clear messages
+        }
+    });
+    ```
 </script>
+    <!-- Authentication Section (visible when not logged in) -->
+    <div id="auth-section" style="padding: 20px; border: 1px solid #ccc; margin: 20px; max-width: 400px;">
+        <h2>Register</h2>
+        <input type="email" id="register-email" placeholder="Email" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <input type="password" id="register-password" placeholder="Password" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <button id="register-button" style="padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Register</button>
+        <p id="register-error" style="color: red;"></p>
+
+        <h2 style="margin-top: 20px;">Login</h2>
+        <input type="email" id="login-email" placeholder="Email" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <button id="login-button" style="padding: 10px 15px; background-color: #008CBA; color: white; border: none; cursor: pointer;">Login</button>
+        <!-- Optional: Google Sign-In Button -->
+        <button id="google-login-button" style="padding: 10px 15px; background-color: #db4437; color: white; border: none; cursor: pointer; margin-left: 10px;">Sign in with Google</button>
+        <p id="login-error" style="color: red;"></p>
+    </div>
+
+    <!-- Dashboard Section (visible when logged in) -->
+    <div id="dashboard-section" style="display: none; padding: 20px; border: 1px solid #000; margin: 20px; max-width: 600px;">
+        <h1>Welcome, <span id="user-display-name" style="color: #333;"></span>!</h1>
+        <p>Your User ID: <span id="user-uid" style="font-size: 0.8em; color: #666;"></span></p>
+
+        <h2 style="margin-top: 20px;">Your Profile</h2>
+        <input type="text" id="profile-name" placeholder="Your Name" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <button id="save-profile-button" style="padding: 8px 12px; background-color: #f44336; color: white; border: none; cursor: pointer;">Save Profile</button>
+        <p id="profile-message"></p>
+
+        <h2 style="margin-top: 20px;">Amal Tracker</h2>
+        <input type="text" id="amal-activity" placeholder="Activity (e.g., Reading Quran)" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <input type="number" id="amal-points" placeholder="Points (e.g., 10)" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <button id="add-amal-button" style="padding: 8px 12px; background-color: #5cb85c; color: white; border: none; cursor: pointer;">Add Amal</button>
+        <p id="amal-message"></p>
+
+        <h2 style="margin-top: 20px;">Global Ranking</h2>
+        <ol id="ranking-list" style="padding-left: 20px;"></ol>
+
+        <button id="logout-button" style="padding: 10px 15px; background-color: #ccc; color: black; border: none; cursor: pointer; margin-top: 20px;">Logout</button>
+    </div>
+    ```
+*I've added some inline `style` attributes for basic readability. In a real app, you'd use a separate CSS file for styling.*
 </body>
 </html>
