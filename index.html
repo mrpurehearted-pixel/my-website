@@ -440,6 +440,107 @@
             </div>
         </div>
 
+        <!-- AMAL TRACKER PAGE -->
+        <div id="page-tracker" class="page max-w-3xl mx-auto">
+            <div class="glass rounded-2xl md:rounded-3xl p-6 mb-6 border-l-4 border-emerald-500 shadow-lg">
+                <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-3"><i class="fa-solid fa-list-check text-emerald-400"></i> <span data-lang="tracker_title">রমাদান আমল ট্র্যাকার</span></h2>
+                <p class="text-slate-400 text-xs md:text-sm mt-2 leading-relaxed" data-lang="tracker_desc">সততার সাথে পূরণ করুন এবং দেখুন পবিত্র রমজানে আপনি কী হারালেন আর কী পেলেন।</p>
+            </div>
+
+            <!-- Day Selector & Score -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div class="glass rounded-2xl p-5 flex items-center justify-between border border-white/5">
+                    <div class="text-[10px] md:text-xs font-bold text-slate-300 uppercase tracking-widest" data-lang="ramadan_day">রমাদানের দিন</div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="changeTrackerDay(-1)" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-emerald-500 transition-all flex items-center justify-center border border-white/10 shadow-md"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <div class="text-2xl md:text-3xl font-black text-emerald-400 font-mono w-8 text-center" id="tracker-day-display">01</div>
+                        <button onclick="changeTrackerDay(1)" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-emerald-500 transition-all flex items-center justify-center border border-white/10 shadow-md"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 flex items-center justify-between border border-sky-500/20 bg-sky-900/10">
+                    <div>
+                        <div class="text-[10px] md:text-xs font-bold text-sky-400 uppercase tracking-widest mb-1" data-lang="score_today">আজকের অর্জন</div>
+                        <div class="text-[9px] md:text-[10px] text-slate-400" data-lang="pts_today">আজকের পয়েন্ট</div>
+                    </div>
+                    <div class="text-3xl md:text-4xl font-black text-white glow-sky" id="today-score">0</div>
+                </div>
+            </div>
+
+            <!-- Total Score Banner -->
+            <div class="glass rounded-2xl p-5 md:p-6 mb-6 md:mb-8 text-center border border-amber-500/20 bg-amber-900/10 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+                <div class="text-[10px] md:text-xs font-bold text-amber-500 uppercase tracking-widest mb-1 relative z-10" data-lang="score_total">পুরো রমাদানের অর্জন</div>
+                <div class="text-[9px] md:text-[10px] text-slate-400 mb-2 md:mb-3 relative z-10" data-lang="pts_total">সর্বমোট পয়েন্ট</div>
+                <div class="text-4xl md:text-5xl font-black text-amber-400 glow-gold relative z-10" id="total-score">0</div>
+            </div>
+
+            <!-- Daily Tasks -->
+            <div class="mb-6 md:mb-8">
+                <div class="flex items-center justify-between mb-4 px-1 md:px-2 border-b border-white/10 pb-3">
+                    <h3 class="text-base md:text-lg font-bold text-sky-400 flex items-center gap-2"><i class="fa-regular fa-calendar-check"></i> <span data-lang="daily_tasks">দৈনিক করণীয়সমূহ</span></h3>
+                    <span class="text-[9px] md:text-[10px] bg-sky-500/10 text-sky-400 px-2 py-1 rounded-md border border-sky-500/20 font-medium tracking-wider" data-lang="pts_rule">প্রতিটি ১ পয়েন্ট</span>
+                </div>
+                <div id="daily-tasks-list" class="space-y-2.5 md:space-y-3"></div>
+            </div>
+
+            <!-- 10 Days Tasks -->
+            <div class="mb-6 md:mb-8">
+                <div class="flex items-center justify-between mb-4 px-1 md:px-2 border-b border-white/10 pb-3">
+                    <h3 class="text-base md:text-lg font-bold text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-layer-group"></i> <span id="phase-title">রহমতের ১০ দিন</span></h3>
+                    <span class="text-[9px] md:text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-md border border-indigo-500/20 font-medium tracking-wider" data-lang="phase_rule">অন্তত একবার (১ পয়েন্ট)</span>
+                </div>
+                <div id="ten-day-tasks-list" class="space-y-2.5 md:space-y-3"></div>
+            </div>
+
+            <!-- Important Tasks -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4 px-1 md:px-2 border-b border-white/10 pb-3">
+                    <h3 class="text-base md:text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-star"></i> <span data-lang="imp_tasks">অত্যন্ত গুরুত্বপূর্ণ আমল</span></h3>
+                    <span class="text-[9px] md:text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md border border-amber-500/20 font-medium tracking-wider" data-lang="imp_rule">প্রতিটি ৫ পয়েন্ট</span>
+                </div>
+                <div id="important-tasks-list" class="space-y-2.5 md:space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS PAGE -->
+        <div id="page-settings" class="page max-w-2xl mx-auto">
+            <div class="glass rounded-2xl md:rounded-3xl p-6 md:p-8 mb-6 border-l-4 border-slate-500 shadow-lg">
+                <h2 class="text-xl md:text-2xl font-bold text-white flex items-center gap-3"><i class="fa-solid fa-gear text-slate-400"></i> <span data-lang="settings_title">অ্যাপ সেটিংস</span></h2>
+            </div>
+
+            <div class="space-y-6 md:space-y-8">
+                <!-- Language Settings -->
+                <div class="glass rounded-2xl p-5 md:p-6 border border-white/5">
+                    <h3 class="text-sm md:text-base font-bold text-sky-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-language"></i> <span data-lang="set_lang">ভাষা</span></h3>
+                    <div class="flex gap-4">
+                        <button id="btn-lang-bn" onclick="setLanguage('bn')" class="lang-btn flex-1 py-3 text-sm md:text-base text-white font-medium shadow-md">বাংলা</button>
+                        <button id="btn-lang-en" onclick="setLanguage('en')" class="lang-btn flex-1 py-3 text-sm md:text-base text-white font-medium shadow-md">English</button>
+                    </div>
+                </div>
+
+                <!-- Location Settings -->
+                <div class="glass rounded-2xl p-5 md:p-6 border border-white/5">
+                    <h3 class="text-sm md:text-base font-bold text-amber-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> <span data-lang="set_loc">স্থান</span></h3>
+                    
+                    <div class="flex gap-4 mb-5">
+                        <button id="btn-loc-auto" onclick="setLocationMode('auto')" class="lang-btn flex-1 py-3 text-sm md:text-base text-white font-medium shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-location-crosshairs"></i> <span data-lang="loc_auto">স্বয়ংক্রিয়</span></button>
+                        <button id="btn-loc-manual" onclick="setLocationMode('manual')" class="lang-btn flex-1 py-3 text-sm md:text-base text-white font-medium shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-hand-pointer"></i> <span data-lang="loc_manual">ম্যানুয়াল</span></button>
+                    </div>
+
+                    <div id="manual-loc-select" class="hidden animate-[fadeIn_0.3s_ease-out]">
+                        <label class="block text-xs md:text-sm text-slate-400 mb-2 font-medium uppercase tracking-wider" data-lang="select_dist">জেলা নির্বাচন করুন</label>
+                        <div class="relative">
+                            <select id="dist-select" onchange="updateManualDistrict()" class="w-full bg-slate-900/60 border border-amber-500/30 text-white text-sm md:text-base rounded-xl py-3 pl-4 focus:border-amber-400 transition-colors cursor-pointer pr-10 outline-none shadow-inner">
+                                <!-- Populated by JS -->
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                        <p class="text-[10px] md:text-xs text-slate-500 mt-3 leading-relaxed italic" data-lang="loc_sync_note">* আপনার জেলা নির্বাচন করলে সালাতের ওয়াক্ত এবং রমজানের সাহরি/ইফতারের সময় স্বয়ংক্রিয়ভাবে সিঙ্ক হয়ে যাবে।</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer class="mt-12 md:mt-16 mb-20 text-center px-4">
             <div class="glass inline-block px-6 md:px-8 py-3 md:py-4 rounded-full border border-white/5 shadow-2xl">
                 <p class="text-[9px] md:text-[11px] text-slate-400 uppercase tracking-[0.2em]"><span data-lang="dev_by">Developed by</span> <span class="text-sky-400 font-bold" style="text-transform: none;">Md. Ariful Islam Khan</span></p>
@@ -494,12 +595,18 @@
     <!-- Global Calendar Modal -->
     <div id="global-calendar-modal" class="fixed inset-0 z-[120] bg-[#020617]/95 hidden flex-col items-center justify-center p-4 backdrop-blur-xl transition-opacity duration-300 opacity-0">
         <div class="glass rounded-3xl w-full max-w-2xl p-5 md:p-8 border border-sky-500/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative transform scale-95 transition-transform duration-300" id="global-calendar-content-wrap">
-            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <h3 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2.5"><i class="fa-solid fa-calendar-days text-sky-400"></i> ক্যালেন্ডার</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2.5"><i class="fa-solid fa-calendar-days text-sky-400"></i> <span data-lang="calendar">ক্যালেন্ডার</span></h3>
                 <button onclick="closeGlobalCalendar()" class="w-10 h-10 rounded-full bg-slate-800 border border-white/10 text-slate-300 hover:text-white hover:bg-red-500/80 hover:border-red-500 transition-all flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
+            
+            <!-- MONTH HEADERS (NEW) -->
+            <div id="global-calendar-headers" class="grid grid-cols-3 gap-1.5 md:gap-3 mb-5 border-b border-white/10 pb-4 text-center">
+                <!-- Populated by JS -->
+            </div>
+
             <div id="global-calendar-content" class="min-h-[300px]"></div>
             <div class="mt-4 flex gap-4 justify-center text-[9px] md:text-xs text-slate-400 font-medium">
                 <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-white block"></span> ইংরেজি</span>
@@ -795,7 +902,7 @@
         let APP_DATA = {};
         
         async function loadStaticData() {
-            let cached = localStorage.getItem('taqwa_static_data_v4');
+            let cached = localStorage.getItem('taqwa_static_data_v5');
             if (cached) {
                 try { APP_DATA = JSON.parse(cached); console.log("Loaded static data."); } 
                 catch (e) { cached = null; }
@@ -898,7 +1005,7 @@
                         { type: 'daily', id: 'eat_after', titleBn: "খাওয়ার পরের দোয়া", titleEn: "After Eating", ar: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِينَ", pronunBn: "আলহামদুলিল্লাহিল্লাযী আতআমানা ওয়া সাকানা ওয়া জাআলানা মুসলিমীন।", pronunEn: "Alhamdu lillahil-ladhi at'amana wa saqana wa ja'alana muslimeen.", meanBn: "সকল প্রশংসা সেই আল্লাহর, যিনি আমাদের খাইয়েছেন, পান করিয়েছেন এবং মুসলিম বানিয়েছেন।", meanEn: "Praise be to Allah Who has fed us, given us drink, and made us Muslims." }
                     ]
                 };
-                localStorage.setItem('taqwa_static_data_v4', JSON.stringify(APP_DATA));
+                localStorage.setItem('taqwa_static_data_v5', JSON.stringify(APP_DATA));
             }
         }
 
@@ -943,11 +1050,17 @@
             const monthsEn = ["Baishakh", "Jaistha", "Asharh", "Srabon", "Bhadro", "Ashwin", "Kartik", "Agrahayon", "Poush", "Magh", "Falgun", "Chaitro"];
             const isLeap = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
             let bYear = date.getFullYear() - 593;
-            const startOfYear = new Date(date.getFullYear(), 3, 14);
-            let diff = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
-            if (diff < 0) { bYear--; const prevStart = new Date(date.getFullYear() - 1, 3, 14); diff = Math.floor((date - prevStart) / (1000 * 60 * 60 * 24)); }
-            let bMonthIdx = 0; const mLen = [31,31,31,31,31,31,30,30,30,30,30,30];
-            if(isLeap(date.getFullYear())) mLen[10]=31;
+            const startOfYear = new Date(date.getFullYear(), 3, 14, 0, 0, 0);
+            const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+            let diff = Math.floor((currentDate - startOfYear) / (1000 * 60 * 60 * 24));
+            if (diff < 0) { 
+                bYear--; 
+                const prevStart = new Date(date.getFullYear() - 1, 3, 14, 0, 0, 0); 
+                diff = Math.floor((currentDate - prevStart) / (1000 * 60 * 60 * 24)); 
+            }
+            let bMonthIdx = 0; 
+            const mLen = [31,31,31,31,31,31,30,30,30,30,29,30];
+            if(isLeap(currentDate.getFullYear())) mLen[10]=30;
             while(diff >= mLen[bMonthIdx]) { diff -= mLen[bMonthIdx]; bMonthIdx++; }
             const bDay = diff + 1;
             if (lang === 'bn') return `${toBnNum(bDay)}${getBnSuffix(bDay)} ${monthsBn[bMonthIdx]} ${toBnNum(bYear)} বঙ্গাব্দ`;
@@ -1752,6 +1865,18 @@
                     const json = await res.json();
                     
                     const key = formatKey(d);
+                    
+                    // Global fix for Feb/Mar 2026 Hijri Offset
+                    if (d.getFullYear() === 2026) {
+                        if (d.getMonth() === 1 && d.getDate() < 19) {
+                            json.data.date.hijri.month.en = "Sha'ban";
+                            json.data.date.hijri.day = (d.getDate() + 12).toString();
+                        } else if (d.getMonth() === 2 && d.getDate() > 20) {
+                            json.data.date.hijri.month.en = "Shawwal";
+                            json.data.date.hijri.day = (d.getDate() - 20).toString();
+                        }
+                    }
+
                     if (APP_DATA.ramadan2026 && APP_DATA.ramadan2026[key]) {
                         json.data.date.hijri.month.en = "Ramadan";
                         json.data.date.hijri.day = APP_DATA.ramadan2026[key].ramadan.toString();
@@ -1927,17 +2052,83 @@
         async function openGlobalCalendar() {
             const modal = document.getElementById('global-calendar-modal');
             const cont = document.getElementById('global-calendar-content');
+            const headers = document.getElementById('global-calendar-headers');
+            
             modal.classList.remove('hidden'); modal.classList.add('flex');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
             
             const now = new Date();
             const y = now.getFullYear(); const m = now.getMonth() + 1;
             cont.innerHTML = '<div class="flex justify-center py-12"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-sky-400"></i></div>';
+            headers.innerHTML = '';
             
             try {
                 const res = await fetch(`https://api.aladhan.com/v1/calendarByCity/${y}/${m}?city=Dhaka&country=Bangladesh`);
                 const data = await res.json();
                 
+                // Override with manual Ramadan 2026 dates if available
+                const mN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                data.data.forEach(day => {
+                    const gregorianDay = day.date.gregorian.day;
+                    const gDayInt = parseInt(gregorianDay);
+                    
+                    // Smooth out the Hijri dates around our manual Ramadan 2026 override
+                    if (y === 2026) {
+                        if (m === 2 && gDayInt < 19) {
+                            day.date.hijri.month.en = "Sha'ban";
+                            day.date.hijri.day = (gDayInt + 12).toString();
+                        } else if (m === 3 && gDayInt > 20) {
+                            day.date.hijri.month.en = "Shawwal";
+                            day.date.hijri.day = (gDayInt - 20).toString();
+                        }
+                    }
+
+                    const key = `${gregorianDay} ${mN[m-1]} ${y}`;
+                    if (APP_DATA.ramadan2026 && APP_DATA.ramadan2026[key]) {
+                        day.date.hijri.day = APP_DATA.ramadan2026[key].ramadan.toString();
+                        day.date.hijri.month.en = "Ramadan";
+                    }
+                });
+                
+                // --- UPDATE MONTH HEADERS ---
+                const mEnList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const mBnList = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+                const gregStr = lang === 'bn' ? `${mBnList[m-1]} ${toBnNum(y)}` : `${mEnList[m-1]} ${y}`;
+                
+                const hFirst = data.data[0].date.hijri;
+                const hLast = data.data[data.data.length - 1].date.hijri;
+                
+                const cleanMonth = (mName) => mName.replace(/ʿ/g, '').replace(/ā/g, 'a').replace(/ū/g, 'u').replace(/ī/g, 'i');
+                const m1 = cleanMonth(hFirst.month.en);
+                const m2 = cleanMonth(hLast.month.en);
+
+                let hijriStr = m1 === m2 
+                    ? `${m1} ${lang === 'bn' ? toBnNum(hFirst.year) : hFirst.year}`
+                    : `${m1} - ${m2} ${lang === 'bn' ? toBnNum(hLast.year) : hLast.year}`;
+
+                const getBMonth = (date) => getBanglaDateFull(date).split(' ')[1];
+                const getBYear = (date) => getBanglaDateFull(date).split(' ')[2];
+                const bFirst = getBMonth(new Date(y, m-1, 1, 0, 0, 0));
+                const bLast = getBMonth(new Date(y, m-1, 28, 0, 0, 0));
+                const bYearVal = getBYear(new Date(y, m-1, 15, 0, 0, 0));
+                let banglaStr = bFirst === bLast ? `${bFirst} ${bYearVal}` : `${bFirst} - ${bLast} ${bYearVal}`;
+                
+                headers.innerHTML = `
+                    <div class="bg-slate-800/60 rounded-xl p-1.5 md:p-2.5 border border-white/5 shadow-inner">
+                        <div class="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">English</div>
+                        <div class="text-[10px] md:text-sm font-bold text-white">${gregStr}</div>
+                    </div>
+                    <div class="bg-amber-500/10 rounded-xl p-1.5 md:p-2.5 border border-amber-500/20 shadow-inner">
+                        <div class="text-[8px] md:text-[10px] text-amber-500/80 uppercase tracking-widest mb-0.5 md:mb-1">হিজরি / Hijri</div>
+                        <div class="text-[10px] md:text-sm font-bold text-amber-400 truncate px-1">${hijriStr}</div>
+                    </div>
+                    <div class="bg-emerald-500/10 rounded-xl p-1.5 md:p-2.5 border border-emerald-500/20 shadow-inner">
+                        <div class="text-[8px] md:text-[10px] text-emerald-500/80 uppercase tracking-widest mb-0.5 md:mb-1">বঙ্গাব্দ / Bangla</div>
+                        <div class="text-[10px] md:text-sm font-bold text-emerald-400 truncate px-1">${banglaStr}</div>
+                    </div>
+                `;
+                // -----------------------------
+
                 const days = lang === 'bn' ? ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহঃ", "শুক্র", "শনি"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                 let html = `<div class="grid grid-cols-7 gap-1 md:gap-2 mb-2 text-center text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">${days.map(d => `<div>${d}</div>`).join('')}</div>`;
                 html += `<div class="grid grid-cols-7 gap-1 md:gap-2">`;
@@ -1948,15 +2139,14 @@
                 data.data.forEach(day => {
                     const gDay = day.date.gregorian.day;
                     const hDay = day.date.hijri.day;
-                    const hMonth = day.date.hijri.month.en;
-                    const dObj = new Date(y, m-1, parseInt(gDay));
+                    const dObj = new Date(y, m-1, parseInt(gDay), 0, 0, 0);
                     const bStr = getBanglaDateFull(dObj).split(' ')[0].replace(/[^০-৯0-9]/g, '');
                     const isToday = parseInt(gDay) === now.getDate();
                     
                     html += `
                     <div class="glass flex flex-col items-center justify-center p-1 md:p-2 rounded-xl border ${isToday ? 'border-sky-400 bg-sky-900/30 shadow-[0_0_15px_rgba(56,189,248,0.3)]' : 'border-white/5'} aspect-square hover:bg-slate-800/60 transition-colors relative cursor-default">
                         <span class="text-sm md:text-lg font-bold ${isToday ? 'text-sky-400' : 'text-white'}">${lang === 'bn' ? toBnNum(gDay) : gDay}</span>
-                        <span class="text-[8px] md:text-[10px] text-amber-400 font-medium">${lang === 'bn' ? toBnNum(hDay) : hDay} ${hMonth.substring(0,3)}</span>
+                        <span class="text-[8px] md:text-[10px] text-amber-400 font-medium">${lang === 'bn' ? toBnNum(hDay) : hDay}</span>
                         <span class="text-[8px] md:text-[9px] text-emerald-400 font-medium absolute bottom-0.5 right-1 md:bottom-1 md:right-1.5">${bStr}</span>
                     </div>`;
                 });
@@ -1976,7 +2166,7 @@
         // --- ISLAMIC ASSISTANT API INTEGRATIONS ---
 
         async function callGeminiAPI(promptOrHistory, systemPrompt = "You are a helpful Islamic assistant.", useJson = false) {
-            const apiKey = "";
+            const apiKey = "AIzaSyAZHEf4Z6sqcCAiRX87UqqXgTWDuQ0vOq8";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             let contentsArray = [];
